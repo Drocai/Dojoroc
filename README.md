@@ -19,6 +19,6 @@ Deploy to **Vercel** or **Netlify**. Once you have your Supabase project values,
 - `SUPABASE_URL`
 - `SUPABASE_KEY`
 
-at the top of your app file to enable real-time syncing.
+in your deployment environment variables (Vercel/Netlify dashboard) or local `.env` file, then read them at the top of your app's config/bootstrap code to enable real-time syncing.
 
 Ready to have Graysen start clicking to generate that first bit of processing power?
