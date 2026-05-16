@@ -1,24 +1,42 @@
-# Dojoroc
+# Frequency Dojo v2
 
-Gamified interactive class skin.
+A gamified, real-time co-op dashboard for onboarding to **Hermes Agent** — built for Derrick & Graysen.
 
-## Systems Architecture Summary
+## Features
+- Co-op mission tracking (Derrick + Graysen)
+- Reactive Dojo Core visual (Canvas)
+- Quency AI co-pilot (via secure proxy)
+- Supabase realtime sync
+- Clean modular React architecture
 
-- **No External Friction:** Uses Supabase for persistence, so data stays alive across devices.
-- **Quency Chatbot:** Powered by **Gemini 2.5 Flash** as a technical co-pilot for curriculum terminal commands (Git/Node/Hermes).
-- **The "Unhermit" Onboarding:** Task list focused on core Hermes setup hurdles:
-  - **Forge the Tools:** Direct links to Git and Node.
-  - **The Summoning:** Exact `curl` command to pull Hermes core.
-  - **The Neural Link:** API key setup.
-- **Co-op State:** Switch between **Derrick** and **Graysen** tracks; shared sessions show shared logs and processing power.
+## Tech Stack
+- React + Vite
+- Tailwind CSS
+- Supabase (Database + Realtime)
+- Lucide-react
 
-## Actionable Next Step
+## Quick Start
 
-Deploy to **Vercel** or **Netlify**. Once you have your Supabase project values, set:
+```bash
+npm install
+cp .env.example .env.local
+npm run dev
+```
 
-- `SUPABASE_URL`
-- `SUPABASE_KEY`
+## Supabase Setup
 
-in your deployment environment variables (Vercel/Netlify dashboard) or local `.env` file, then read them at the top of your app's config/bootstrap code to enable real-time syncing.
+1. Create a Supabase project
+2. Run the SQL schema (provided separately)
+3. Add your Project URL and anon key to `.env.local`
 
-Ready to have Graysen start clicking to generate that first bit of processing power?
+## Deployment on Vercel
+
+This repository is configured for automatic deployments.
+
+1. Connect the repo on Vercel
+2. Add these environment variables:
+   - `VITE_SUPABASE_URL`
+   - `VITE_SUPABASE_ANON_KEY`
+   - `VITE_AI_PROXY_URL` (optional)
+
+Vercel will automatically deploy on every push to `main`.
