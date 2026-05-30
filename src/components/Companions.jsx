@@ -101,7 +101,10 @@ const Companions = ({ rocs = {}, accountXp = 0, currentGym, pro = false, activeR
                       {m.name || m.gym}
                       {currentGym?.id === m.gym && <MapPin size={10} className={theme.text} />}
                     </span>
-                    <span className={`font-mono ${theme.text}`}>{m.xp} XP</span>
+                    <span className="flex items-center gap-2 flex-shrink-0">
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded-full bg-zinc-950 border border-zinc-700 ${theme.text}`}>{m.belt}</span>
+                      <span className="font-mono text-zinc-500">{m.xp}</span>
+                    </span>
                   </div>
                 ))}
               </div>

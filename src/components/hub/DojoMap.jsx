@@ -2,6 +2,7 @@ import React from 'react';
 import { DoorOpen, Check, MapPin, Lock } from 'lucide-react';
 import { activePack, enterPackData } from '../../../packs/index.js';
 import { themeFor } from '../../lib/theme';
+import { gymBelt } from '../../lib/rocs';
 import RocAvatar from '../RocAvatar';
 
 const BRAND_EMOJI = { Zap: '⚡', Flame: '🔥', Rocket: '🚀', Gamepad2: '🎮', Music: '🎵', BookOpen: '📚', Brain: '🧠', Sparkles: '✨' };
@@ -51,7 +52,14 @@ const DojoMap = ({ rooms, profile, roc }) => {
                   {isHere && <span className={`absolute -top-2 left-1/2 -translate-x-1/2 text-[8px] uppercase tracking-wide px-1.5 py-0.5 rounded-full ${t.solid} text-white`}>Here</span>}
                 </button>
                 <div className="text-[11px] font-semibold text-center mt-3 truncate w-full">{d.brand?.title || room.name}</div>
-                <div className={`text-[9px] ${t.text}`}>{gymXp > 0 ? `${gymXp} XP trained` : 'unexplored'}</div>
+                {gymXp > 0 ? (
+                  <div className="text-[9px] text-center">
+                    <span className={t.text}>{gymBelt(roc, room.id).name}</span>
+                    <span className="text-zinc-600"> · {gymXp} XP</span>
+                  </div>
+                ) : (
+                  <div className="text-[9px] text-zinc-600">unexplored</div>
+                )}
                 {!isHere ? (
                   <button onClick={() => enterPackData(d)} className={`mt-1 text-[9px] px-2 py-0.5 rounded-lg ${t.btn} text-white flex items-center gap-0.5`}>
                     <DoorOpen size={9} /> Enter

@@ -16,8 +16,11 @@
 import { makeHandoff } from '../src/lib/handoff.js';
 import frequencyDojoData from './frequencyDojoData.js';
 import cosmosLabData from './cosmosLabData.js';
+import numberDojoData from './numberDojoData.js';
+import artDojoData from './artDojoData.js';
+import soundDojoData from './soundDojoData.js';
 
-export const BUILTIN_PACKS = [frequencyDojoData, cosmosLabData];
+export const BUILTIN_PACKS = [frequencyDojoData, cosmosLabData, numberDojoData, artDojoData, soundDojoData];
 export const DEFAULT_PACK_ID = 'frequency-dojo';
 const ACTIVE_KEY = 'dojo.activePack';
 

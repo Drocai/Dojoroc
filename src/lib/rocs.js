@@ -161,13 +161,16 @@ export const rocBelt = (roc) => rankFor(roc?.xp || 0);
 export const rocTier = (roc) => beltIndex(roc?.xp || 0);
 export const unlockedAbilities = (roc) => ABILITIES.filter((a) => rocTier(roc) >= a.belt);
 
-// Gyms this Roc has trained in (with XP each), best first — its specialties.
+// Gyms this Roc has trained in (with XP + the belt earned THERE), best first.
 export function rocMastery(roc) {
   return Object.entries(roc?.trained || {})
-    .map(([gym, v]) => ({ gym, xp: v?.xp || 0 }))
+    .map(([gym, v]) => ({ gym, xp: v?.xp || 0, name: v?.name, belt: rankFor(v?.xp || 0).name }))
     .filter((m) => m.xp > 0)
     .sort((a, b) => b.xp - a.xp);
 }
+
+// The belt a Roc has earned within a single gym (by XP trained there).
+export const gymBelt = (roc, gymId) => rankFor(roc?.trained?.[gymId]?.xp || 0);
 
 // How many species are owned vs total — collection progress.
 export function collectionProgress(rocs = {}) {
