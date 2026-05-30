@@ -20,6 +20,8 @@ import RocAvatar from './components/RocAvatar';
 import RocReaction from './components/RocReaction';
 import { ensureRocs, buildRocPrompt, unlockedAbilities } from './lib/rocs';
 import { startProCheckout } from './lib/profile';
+import DailyQuests from './components/DailyQuests';
+import { recordQuest, freshQuests, claimQuest, todaysQuests } from './lib/quests';
 // Hub (rooms grid + builder + leaderboard) is code-split — only loads on demand.
 const Hub = lazy(() => import('./components/hub/Hub'));
 import { activePack } from '../packs/index.js';
@@ -134,6 +136,12 @@ function App() {
   // Roc reaction bus: bump {kind,n} to make the companion cheer.
   const reactN = useRef(0);
   const fireReaction = (kind) => setReaction({ kind, n: ++reactN.current });
+  // Record progress toward today's daily quests for an action kind.
+  const trackQuest = (kind, amount = 1) =>
+    updateData((d) => {
+      const quests = recordQuest(d.quests, kind, amount);
+      return quests === d.quests ? d : { ...d, quests };
+    });
   const updateRoc = (id, patch) =>
     updateData((d) => ({ ...d, rocs: { ...(d.rocs || {}), [id]: { ...(d.rocs || {})[id], ...patch } } }));
 
@@ -168,7 +176,7 @@ function App() {
     const leveled = levelFor(newTotal) > levelFor(oldTotal);
     if (leveled) logs = pushLog(logs, `${stamp()} · ${lore.levelUp(levelFor(newTotal), me.label)}`);
     updateRoom({ tasks: newTasks, xp, logs });
-    if (adding) fireReaction(leveled ? 'levelup' : 'mission');
+    if (adding) { fireReaction(leveled ? 'levelup' : 'mission'); trackQuest('mission'); }
   };
 
   const awardArcade = (game, score) => {
@@ -183,6 +191,7 @@ function App() {
     if (leveled) logs = pushLog(logs, `${stamp()} · ${lore.levelUp(levelFor(newTotal), me.label)}`);
     updateRoom({ bonusXp, scores, logs });
     fireReaction(leveled ? 'levelup' : 'arcade');
+    trackQuest('arcade');
   };
 
   return (
@@ -247,6 +256,23 @@ function App() {
         {view === 'missions' && (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
             <div className="lg:col-span-7 space-y-6">
+              <DailyQuests
+                quests={data.quests}
+                accent={brand.accent}
+                onClaim={(q) => updateData((d) => {
+                  const quests = claimQuest(d.quests, q.id);
+                  if (quests === d.quests) return d;
+                  // Award the quest XP as room bonus XP (also ranks the active Roc).
+                  const cur = { ...seedRoom, ...((d.rooms || {})[ROOM_ID] || {}) };
+                  const next = { ...d, quests, rooms: { ...(d.rooms || {}), [ROOM_ID]: { ...cur, bonusXp: (cur.bonusXp || 0) + q.xp, name: brand.title } } };
+                  const aid = d.activeRocId;
+                  if (aid && d.rocs?.[aid]) {
+                    const r = d.rocs[aid];
+                    next.rocs = { ...d.rocs, [aid]: { ...r, xp: (r.xp || 0) + q.xp } };
+                  }
+                  return next;
+                })}
+              />
               <TrackLane title={`${me.label}'s Mission`} tasks={missions} completed={prog.tasks || []} onToggle={toggleTask} />
 
               <div className="hud bg-zinc-900 border border-zinc-800 rounded-3xl p-6">
@@ -312,11 +338,11 @@ function App() {
           <div className="max-w-2xl mx-auto space-y-5">
             <Sparring
               roc={activeRoc}
-              onWin={(xp) => activeRoc && updateData((d) => {
+              onWin={(xp) => { trackQuest('spar'); activeRoc && updateData((d) => {
                 const r = d.rocs[d.activeRocId];
                 if (!r) return d;
                 return { ...d, rocs: { ...d.rocs, [d.activeRocId]: { ...r, xp: (r.xp || 0) + xp } } };
-              })}
+              }); }}
             />
             <Companions
               rocs={rocs}
