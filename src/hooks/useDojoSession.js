@@ -4,8 +4,11 @@ import { activePack } from '../../packs/index.js';
 
 const DEFAULT_PLAYER = { xp: 0, bonusXp: 0, hz: 100, tasks: [] };
 
-// Seed a player slot for every player the active pack defines, so the session
-// shape follows the pack (not a hard-coded Derrick/Graysen).
+// Each room keeps its own progress in its own dojo_sessions row. The built-in
+// starter stays on the original 'main' row so existing progress is preserved.
+const SESSION_ID = activePack.id === 'frequency-dojo' ? 'main' : `pack:${activePack.id}`;
+
+// Seed a player slot for every player the active room defines.
 const seedSession = () => {
   const boot = activePack.lore?.boot || 'Dojo initialized.';
   const base = { logs: [boot], scores: {} };
@@ -24,23 +27,18 @@ export function useDojoSession() {
     }
 
     const channel = supabase
-      .channel('dojo-realtime')
-      .on('postgres_changes', { 
-        event: '*', 
-        schema: 'public', 
-        table: 'dojo_sessions' 
-      }, (payload) => {
-        if (payload.new) setSession(payload.new);
-      })
+      .channel(`dojo-${SESSION_ID}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'dojo_sessions', filter: `id=eq.${SESSION_ID}` },
+        (payload) => {
+          if (payload.new && payload.new.id === SESSION_ID) setSession(payload.new);
+        }
+      )
       .subscribe();
 
     const load = async () => {
-      const { data } = await supabase
-        .from('dojo_sessions')
-        .select('*')
-        .eq('id', 'main')
-        .single();
-
+      const { data } = await supabase.from('dojo_sessions').select('*').eq('id', SESSION_ID).maybeSingle();
       if (data) setSession(data);
       setLoading(false);
     };
@@ -54,9 +52,7 @@ export function useDojoSession() {
     setSession(newSession);
 
     if (supabase) {
-      await supabase
-        .from('dojo_sessions')
-        .upsert({ id: 'main', ...newSession });
+      await supabase.from('dojo_sessions').upsert({ id: SESSION_ID, ...newSession });
     }
   };
 

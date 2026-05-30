@@ -1,44 +1,49 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Heart, RotateCcw } from 'lucide-react';
+import { Heart, RotateCcw, Crosshair } from 'lucide-react';
 import { ARCADE_QUIZ, saveScore, pickRandom } from '../../lib/arcade';
 
-// A learning shooter: a question shows up top, answer pods drift down. Tap the
-// correct one to "blast" it. Wrong tap or letting the correct pod escape costs
-// a life. Three lives, then game over. Pods fall faster as your score climbs.
+// Quiz Blaster (reworked): the question sits up top; its answers descend
+// together, one per column (no overlap, big tap targets). Tap the correct
+// answer to blast it before the row reaches the floor. Wrong tap or letting
+// the row land costs a life. Speeds up gently as you score.
 
-const BASE_SPEED = 0.2; // % of play height per tick
-const TICK = 40; // ms
+const FLOOR = 86; // % — the danger line
+const TICK = 50; // ms
 
-const newRound = (quiz) => {
+const makeRound = (quiz) => {
   const q = pickRandom(quiz);
-  const lanes = [12, 38, 62, 86];
-  const order = [...q.answers.keys()].sort(() => Math.random() - 0.5);
-  const pods = q.answers.map((text, i) => ({
-    id: `${Date.now()}-${i}`,
-    text,
-    correct: i === q.correct,
-    x: lanes[order[i] % lanes.length],
-    y: -10 - i * 22,
-  }));
-  return { q: q.q, pods };
+  const answers = q.answers.slice(0, 3);
+  const order = answers.map((_, i) => i).sort(() => Math.random() - 0.5); // shuffle columns
+  return {
+    question: q.q,
+    correct: q.correct,
+    chips: order.map((answerIdx, col) => ({
+      id: `${Date.now()}-${col}`,
+      text: answers[answerIdx],
+      correct: answerIdx === q.correct,
+      col, // 0..2
+    })),
+  };
 };
 
 const ShooterGame = ({ accent, quiz = ARCADE_QUIZ, onResult }) => {
-  const [round, setRound] = useState(() => newRound(quiz));
-  const [pods, setPods] = useState(round.pods);
+  const [round, setRound] = useState(() => makeRound(quiz));
+  const [y, setY] = useState(0); // shared descent of the current row (0..100)
   const [score, setScore] = useState(0);
   const [lives, setLives] = useState(3);
   const [best, setBest] = useState(0);
   const [over, setOver] = useState(false);
   const [flash, setFlash] = useState(null); // 'hit' | 'miss'
+  const [gone, setGone] = useState({}); // chip ids already blasted this round
+
   const scoreRef = useRef(0);
-  const speedRef = useRef(BASE_SPEED);
+  const speedRef = useRef(1);
   const onResultRef = useRef(onResult);
   onResultRef.current = onResult;
 
   useEffect(() => {
     scoreRef.current = score;
-    speedRef.current = Math.min(BASE_SPEED * 2.6, BASE_SPEED * (1 + score / 250)); // ramps up
+    speedRef.current = 1 + Math.min(1.6, score / 200); // ramps up
   }, [score]);
 
   const endGame = useCallback(() => {
@@ -49,57 +54,46 @@ const ShooterGame = ({ accent, quiz = ARCADE_QUIZ, onResult }) => {
 
   const loseLife = useCallback(() => {
     setLives((l) => {
-      const next = l - 1;
-      if (next <= 0) endGame();
-      return next;
+      const n = l - 1;
+      if (n <= 0) endGame();
+      return n;
     });
+    setFlash('miss');
+    setTimeout(() => setFlash(null), 220);
   }, [endGame]);
 
-  const nextRound = useCallback(() => {
-    const r = newRound(quiz);
-    setRound(r);
-    setPods(r.pods);
+  const next = useCallback(() => {
+    setRound(makeRound(quiz));
+    setY(0);
+    setGone({});
   }, [quiz]);
 
-  // Falling animation.
+  // Descent loop.
   useEffect(() => {
     if (over) return;
     const t = setInterval(() => {
-      setPods((prev) => {
-        let lostCorrect = false;
-        const moved = prev
-          .map((p) => ({ ...p, y: p.y + speedRef.current * TICK }))
-          .filter((p) => {
-            if (p.y >= 100) {
-              if (p.correct) lostCorrect = true;
-              return false;
-            }
-            return true;
-          });
-        if (lostCorrect) {
-          setFlash('miss');
-          setTimeout(() => setFlash(null), 250);
+      setY((prev) => {
+        const ny = prev + 0.55 * speedRef.current;
+        if (ny >= FLOOR) {
           loseLife();
-          setTimeout(nextRound, 0);
-          return [];
+          next();
+          return 0;
         }
-        return moved;
+        return ny;
       });
     }, TICK);
     return () => clearInterval(t);
-  }, [over, loseLife, nextRound]);
+  }, [over, loseLife, next]);
 
-  const shoot = (pod) => {
-    if (over) return;
-    if (pod.correct) {
+  const blast = (chip) => {
+    if (over || gone[chip.id]) return;
+    if (chip.correct) {
       setScore((s) => s + 10);
       setFlash('hit');
-      setTimeout(() => setFlash(null), 200);
-      nextRound();
+      setTimeout(() => setFlash(null), 180);
+      next();
     } else {
-      setPods((prev) => prev.filter((p) => p.id !== pod.id));
-      setFlash('miss');
-      setTimeout(() => setFlash(null), 200);
+      setGone((g) => ({ ...g, [chip.id]: true }));
       loseLife();
     }
   };
@@ -108,7 +102,7 @@ const ShooterGame = ({ accent, quiz = ARCADE_QUIZ, onResult }) => {
     setScore(0);
     setLives(3);
     setOver(false);
-    nextRound();
+    next();
   };
 
   return (
@@ -123,39 +117,44 @@ const ShooterGame = ({ accent, quiz = ARCADE_QUIZ, onResult }) => {
         <div className="text-zinc-400 text-xs">Best {best}</div>
       </div>
 
-      <div className="text-center text-sm font-medium text-white bg-zinc-950 border border-zinc-800 rounded-2xl px-3 py-2 min-h-[40px] flex items-center justify-center">
-        {round.q}
+      <div className="text-center text-sm font-semibold text-white bg-black/50 border border-zinc-700 rounded-2xl px-3 py-2 min-h-[44px] flex items-center justify-center">
+        {round.question}
       </div>
 
       <div
-        className={`relative h-[300px] rounded-2xl overflow-hidden border bg-zinc-950 transition-colors ${
-          flash === 'hit' ? 'border-emerald-500' : flash === 'miss' ? 'border-rose-500' : 'border-zinc-800'
+        className={`relative h-[300px] rounded-2xl overflow-hidden border bg-black/40 transition-colors ${
+          flash === 'hit' ? 'border-emerald-500' : flash === 'miss' ? 'border-rose-500' : 'border-zinc-700'
         }`}
       >
+        {/* danger line */}
+        <div className="absolute left-0 right-0 border-t border-dashed border-rose-500/40" style={{ top: `${FLOOR}%` }} />
+
         {over ? (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-zinc-950/90">
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/70">
             <div className="text-lg font-bold">Game Over</div>
-            <div className="text-sm text-zinc-400">
-              Score {score} · Best {best}
-            </div>
+            <div className="text-sm text-zinc-400">Score {score} · Best {best}</div>
             <button onClick={restart} className={`px-4 py-2 rounded-2xl ${accent.btn} text-white text-sm flex items-center gap-2`}>
               <RotateCcw size={15} /> Play again
             </button>
           </div>
         ) : (
-          pods.map((p) => (
-            <button
-              key={p.id}
-              onClick={() => shoot(p)}
-              style={{ left: `${p.x}%`, top: `${p.y}%`, transform: 'translate(-50%, 0)' }}
-              className="absolute max-w-[44%] px-3 py-1.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 text-[11px] leading-tight text-white shadow-lg"
-            >
-              {p.text}
-            </button>
-          ))
+          round.chips.map((chip) =>
+            gone[chip.id] ? null : (
+              <button
+                key={chip.id}
+                onClick={() => blast(chip)}
+                style={{ left: `${4 + chip.col * 32}%`, top: `${y}%`, width: '28%' }}
+                className={`absolute px-2 py-2 rounded-xl border text-xs leading-tight text-white text-center shadow-lg active:scale-95 transition-transform ${accent.solid} border-white/20`}
+              >
+                {chip.text}
+              </button>
+            )
+          )
         )}
       </div>
-      <p className="text-[11px] text-zinc-500 text-center">Tap the correct answer before it reaches the bottom.</p>
+      <p className="text-[11px] text-zinc-400 text-center flex items-center justify-center gap-1">
+        <Crosshair size={12} /> Tap the right answer before it crosses the line.
+      </p>
     </div>
   );
 };

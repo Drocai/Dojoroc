@@ -9,10 +9,10 @@ const mentor = players[0];
 const student = players[1] || players[0];
 const accent = themeFor(brand.accent);
 
-const FamilyChat = ({ currentUser }) => {
-  const mePlayer = players.find((p) => p.key === currentUser) || mentor;
-  const me = mePlayer.chatName;
-  const mineTheme = themeFor(mePlayer.color);
+const FamilyChat = ({ displayName }) => {
+  const stored = typeof localStorage !== 'undefined' && localStorage.getItem('dojo.displayName');
+  const me = displayName || stored || mentor.chatName;
+  const mineTheme = accent;
   const [room, setRoom] = useState(chat.defaultRoom);
   const [joined, setJoined] = useState(chat.defaultRoom);
   const [input, setInput] = useState('');
