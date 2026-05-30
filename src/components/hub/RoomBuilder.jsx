@@ -7,21 +7,21 @@ import { supabase } from '../../lib/supabase';
 // The "head sensei" room builder. You give a short brief; Quency generates a
 // full room (a new teacher) as JSON; you preview it and save it to the dojo.
 
-const ARCHITECT_SYSTEM = `You are the Dojo Architect — you design "rooms" (self-contained learning modules) for a kid-friendly learning app.
-Return ONLY one minified JSON object and NOTHING else (no prose, no markdown, no code fences).
-JSON schema:
-{
- "name": string, "subject": string,
- "brand": { "title": UPPERCASE string, "icon": one of ["Zap","Flame","Rocket","Gamepad2","Music","BookOpen","Brain","Sparkles"], "accent": one of ["emerald","purple","blue","amber","rose","cyan"], "coreLabel": string, "coreUnit": short string },
- "players": [ {"key": slug, "label": name, "chatName": name, "color": accent-name, "role":"mentor"}, {"key": slug, "label": name, "chatName": name, "color": accent-name, "role":"student"} ],
- "sensei": { "name": string, "title": "AI SENSEI", "greeting": string, "placeholder": string },
- "lore": { "tagline": string, "canon": string, "boot": string, "emptyActivity": string, "levelUpTemplate": "uses {name} and {lvl}", "arcadeXpTemplate": "uses {name} and {xp}" },
- "missions": [ 3-5 of {"id": slug, "title": string, "desc": string, "xp": number 100-250} ],
- "modes": [ 2-3 of {"key": slug, "label": string, "note": string, "system": a kid-safe teaching-persona prompt for this subject} ],
- "arcade": { "tips": [6-10 short fact strings], "quiz": [5-8 of {"q": string, "answers": [3 strings], "correct": index 0-2}] },
- "handoff": { "studentDefault": name, "projectName": string, "sheetTitle": UPPERCASE string, "aiPolishTemplate": "instruction using {name}", "questionGroups": [1-2 of {"title": string, "items": [[id,label,hint], ...]}], "blocks": [1-3 of {"key": slug, "title": string, "where": string, "bodyTemplate": "text using {name} and answer ids"}] }
-}
-Everything must be age-appropriate and specifically about the requested subject. Return ONLY the JSON object.`;
+// Lean schema on purpose: the client fills safe defaults for anything omitted,
+// so the model can stay small and fast (and inside the function time limit).
+const ARCHITECT_SYSTEM = `You are the Dojo Architect — you design kid-friendly learning "rooms".
+Return ONLY one minified JSON object, nothing else (no prose, no code fences). Keep strings short.
+Schema:
+{"name":str,"subject":str,
+"brand":{"title":UPPERCASE,"icon":one of ["Zap","Flame","Rocket","Gamepad2","Music","BookOpen","Brain","Sparkles"],"accent":one of ["emerald","purple","blue","amber","rose","cyan"],"coreLabel":str,"coreUnit":short},
+"players":[{"key":slug,"label":mentorName,"chatName":mentorName,"color":accent,"role":"mentor"},{"key":slug,"label":studentName,"chatName":studentName,"color":accent,"role":"student"}],
+"sensei":{"name":str,"title":"AI SENSEI","greeting":str,"placeholder":str},
+"lore":{"tagline":str,"boot":str,"emptyActivity":str,"levelUpTemplate":"uses {name} {lvl}","arcadeXpTemplate":"uses {name} {xp}"},
+"missions":[3 of {"id":slug,"title":str,"desc":short,"xp":100-250}],
+"modes":[2 of {"key":slug,"label":str,"note":short,"system":a kid-safe teaching-persona prompt for this subject}],
+"arcade":{"tips":[6 short fact strings],"quiz":[5 of {"q":str,"answers":[3 short strings],"correct":0-2}]},
+"handoff":{"studentDefault":studentName,"aiPolishTemplate":"short instruction using {name}","questionGroups":[1 of {"title":str,"items":[[id,label,hint],[id,label,hint]]}],"blocks":[1 of {"key":slug,"title":str,"where":str,"bodyTemplate":"text using {name}"}]}}
+Age-appropriate, specifically about the requested subject. ONLY the JSON object.`;
 
 const RoomBuilder = ({ accent, onClose }) => {
   const [form, setForm] = useState({ subject: '', student: '', mentor: 'Dad', level: '', firstWin: '', vibe: '' });
@@ -60,7 +60,7 @@ const RoomBuilder = ({ accent, onClose }) => {
       const res = await fetch(CHAT_ENDPOINT, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: brief, model: 'sonnet', system: ARCHITECT_SYSTEM, maxTokens: 4000 }),
+        body: JSON.stringify({ message: brief, model: 'sonnet', system: ARCHITECT_SYSTEM, maxTokens: 2600 }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || `Error ${res.status}`);
