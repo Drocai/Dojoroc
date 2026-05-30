@@ -19,7 +19,7 @@ import Sparring from './components/Sparring';
 import RocAvatar from './components/RocAvatar';
 import RocReaction from './components/RocReaction';
 import { ensureRocs, buildRocPrompt, unlockedAbilities } from './lib/rocs';
-import { startProCheckout } from './lib/profile';
+import { startProCheckout, giftRoc } from './lib/profile';
 import DailyQuests from './components/DailyQuests';
 import BeatLab from './components/BeatLab';
 import SketchPad from './components/SketchPad';
@@ -92,6 +92,14 @@ function App() {
     }, 2000);
     window.history.replaceState({}, '', window.location.pathname);
     return () => clearInterval(iv);
+  }, [profile?.username, refresh]);
+
+  // Re-pull on tab focus so incoming Roc gifts (sent while away) show up.
+  useEffect(() => {
+    if (!profile) return;
+    const onFocus = () => document.visibilityState === 'visible' && refresh();
+    document.addEventListener('visibilitychange', onFocus);
+    return () => document.removeEventListener('visibilitychange', onFocus);
   }, [profile?.username, refresh]);
 
   // Count today's visit toward the streak + ensure a Roc roster exists (once).
@@ -374,6 +382,21 @@ function App() {
               accountXp={crossTotal}
               currentGym={{ id: ROOM_ID, name: brand.title }}
               pro={data.pro === true}
+              gifts={data.giftsIn || []}
+              onGift={async (roc, toUser) => {
+                // Send a clean copy (strip gift metadata if present).
+                const { from, fromUser, giftedAt, ...clean } = roc;
+                return giftRoc(profile.username, profile.token, toUser, clean);
+              }}
+              onClaimGift={(i) => updateData((d) => {
+                const inbox = d.giftsIn || [];
+                const gift = inbox[i];
+                if (!gift) return d;
+                const { from, fromUser, giftedAt, ...roc } = gift;
+                // Fresh id so it can't collide with an existing Roc.
+                const newRoc = { ...roc, id: `roc_${Date.now().toString(36)}${i}` };
+                return { ...d, giftsIn: inbox.filter((_, x) => x !== i), rocs: { ...(d.rocs || {}), [newRoc.id]: newRoc } };
+              })}
               onGoPro={async () => {
                 const r = await startProCheckout(profile.username);
                 if (r?.url) window.location.href = r.url;

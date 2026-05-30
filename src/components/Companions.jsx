@@ -1,24 +1,34 @@
 import React, { useState } from 'react';
-import { Award, Check, Plus, Pencil, Sparkles, MapPin, Lock } from 'lucide-react';
+import { Award, Check, Plus, Pencil, Sparkles, MapPin, Lock, Crown, Gift, Inbox } from 'lucide-react';
 import RocAvatar from './RocAvatar';
 import { BESTIARY, SPECIES, RARITIES, PERSONAS, makeRoc, rocBelt, unlockedAbilities, availablePersonas, ownedCosmetics, rocMastery, collectionProgress, speciesUnlocked, SPECIES_UNLOCK, isProSpecies, proLocked, FEATURE_PREMIUM, evoStage } from '../lib/rocs';
 import { BELTS } from '../lib/rank';
-import { Crown } from 'lucide-react';
 import { themeFor } from '../lib/theme';
 
 // Your stable of Rocs: see them, pick the active one (travels with you + powers
-// chat), rename, switch personality, and adopt a free starter.
-const Companions = ({ rocs = {}, accountXp = 0, currentGym, pro = false, activeRocId, onSetActive, onRename, onSetPersona, onAdopt, onEquip, onGoPro }) => {
+// chat), rename, switch personality, adopt starters, gift Rocs, and claim gifts.
+const Companions = ({ rocs = {}, accountXp = 0, currentGym, pro = false, gifts = [], activeRocId, onSetActive, onRename, onSetPersona, onAdopt, onEquip, onGoPro, onGift, onClaimGift }) => {
   const list = Object.values(rocs);
   const active = rocs[activeRocId];
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(active?.name || '');
+  const [gifting, setGifting] = useState(null); // roc being gifted
+  const [giftTo, setGiftTo] = useState('');
+  const [giftMsg, setGiftMsg] = useState('');
   const { owned: ownedCount, total, ownedSet: owned } = collectionProgress(rocs);
 
   const theme = themeFor(active?.color || 'emerald');
   const mastery = active ? rocMastery(active) : [];
   const [poke, setPoke] = useState(false);
   const pokeRoc = () => { setPoke(true); setTimeout(() => setPoke(false), 520); };
+
+  const sendGift = async () => {
+    if (!giftTo.trim() || !gifting) return;
+    setGiftMsg('Sending…');
+    const r = await onGift(gifting, giftTo.trim().toLowerCase());
+    if (r?.error) setGiftMsg(r.error);
+    else { setGiftMsg(''); setGifting(null); setGiftTo(''); }
+  };
 
   return (
     <div className="space-y-5">
@@ -32,6 +42,43 @@ const Companions = ({ rocs = {}, accountXp = 0, currentGym, pro = false, activeR
           <span className="text-xs px-3 py-1.5 rounded-xl bg-amber-500 text-zinc-900 font-semibold">Upgrade</span>
         </button>
       )}
+
+      {gifts.length > 0 && (
+        <div className="hud bg-zinc-900 border border-emerald-700/50 rounded-3xl p-6">
+          <div className="text-sm font-semibold mb-3 flex items-center gap-2"><Inbox size={16} className="text-emerald-400" /> Gifts for you ({gifts.length})</div>
+          <div className="space-y-2">
+            {gifts.map((g, i) => {
+              const t = themeFor(g.color);
+              return (
+                <div key={i} className="flex items-center gap-3 bg-zinc-950 border border-zinc-800 rounded-2xl p-2.5">
+                  <RocAvatar roc={g} size={40} />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-semibold truncate">{g.name} <span className={`text-[10px] ${t.text}`}>{SPECIES[g.species]?.name}</span></div>
+                    <div className="text-[10px] text-zinc-500">from {g.from || g.fromUser} · {rocBelt(g).name}</div>
+                  </div>
+                  <button onClick={() => onClaimGift(i)} className={`text-xs px-3 py-1.5 rounded-xl ${theme.btn} text-white font-semibold flex items-center gap-1`}><Gift size={12} /> Accept</button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {gifting && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/70" onClick={() => setGifting(null)}>
+          <div className="hud bg-zinc-900 border border-white/15 rounded-3xl p-6 w-[min(94vw,360px)]" onClick={(e) => e.stopPropagation()}>
+            <div className="text-sm font-semibold mb-1 flex items-center gap-2"><Gift size={16} className={theme.text} /> Gift {gifting.name}</div>
+            <p className="text-xs text-zinc-500 mb-3">Send a copy of this Roc to another learner by username. They keep all its training.</p>
+            <input value={giftTo} onChange={(e) => setGiftTo(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && sendGift()} autoCapitalize="none" placeholder="their username" className="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2.5 text-sm outline-none mb-2" />
+            {giftMsg && <p className="text-xs text-rose-400 mb-2">{giftMsg}</p>}
+            <div className="flex gap-2">
+              <button onClick={() => setGifting(null)} className="flex-1 py-2.5 rounded-xl bg-zinc-800 text-zinc-300 text-sm">Cancel</button>
+              <button onClick={sendGift} className={`flex-1 py-2.5 rounded-xl ${theme.btn} text-white text-sm font-semibold`}>Send Gift</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {active && (
         <div className="hud bg-zinc-900 border border-zinc-800 rounded-3xl p-6">
           <div className="flex items-center gap-4">
@@ -46,7 +93,8 @@ const Companions = ({ rocs = {}, accountXp = 0, currentGym, pro = false, activeR
                 </div>
               ) : (
                 <div className="font-display text-xl flex items-center gap-2">{active.name}
-                  <button onClick={() => { setName(active.name); setEditing(true); }} className="text-zinc-500 hover:text-white"><Pencil size={13} /></button>
+                  <button onClick={() => { setName(active.name); setEditing(true); }} className="text-zinc-500 hover:text-white" aria-label="Rename"><Pencil size={13} /></button>
+                  {list.length > 1 && <button onClick={() => { setGifting(active); setGiftMsg(''); }} className="text-zinc-500 hover:text-emerald-400" aria-label="Gift this Roc" title="Gift this Roc"><Gift size={13} /></button>}
                 </div>
               )}
               <div className="text-xs text-zinc-500">{SPECIES[active.species]?.name} · <span className={theme.text}>{evoStage(active).name}</span></div>

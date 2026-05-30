@@ -43,6 +43,8 @@ export const deletePack = (id, username, token) =>
   rpc('dojo_delete_pack', { p_id: id, p_username: username, p_token: token });
 export const leaderboard = () => rpc('dojo_leaderboard', {});
 export const publicProfile = (username) => rpc('dojo_public_profile', { p_username: username });
+export const giftRoc = (from, token, to, roc) =>
+  rpc('dojo_gift_roc', { p_from: from, p_token: token, p_to: to, p_roc: roc });
 
 // Kick off Stripe checkout for Pro; returns { url } to redirect to (or {error}).
 export async function startProCheckout(username) {
