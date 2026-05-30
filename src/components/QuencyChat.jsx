@@ -141,7 +141,7 @@ const QuencyChat = ({ memory = '', displayName, onRemember, roc, abilities = [],
     <div className="bg-zinc-900 border border-zinc-800 rounded-3xl flex flex-col h-[560px] overflow-hidden">
       <div className="px-6 py-4 border-b border-zinc-800 flex items-center gap-3 bg-zinc-950/50">
         <div className={`w-9 h-9 rounded-2xl border flex items-center justify-center overflow-hidden ${accent.avatar}`}>
-          {roc ? <RocAvatar roc={roc} size={34} /> : <MessageSquare className={accent.text} size={18} />}
+          {roc ? <RocAvatar roc={roc} size={34} idle={!isTyping} poke={isTyping} /> : <MessageSquare className={accent.text} size={18} />}
         </div>
         <div className="flex-1 min-w-0">
           <div className="font-semibold tracking-tight truncate">{who}</div>

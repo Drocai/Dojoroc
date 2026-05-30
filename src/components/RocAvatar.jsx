@@ -5,9 +5,10 @@ import { SPECIES } from '../lib/rocs';
 // Procedural SVG Roc — a little training rock with belt-colored band + per-
 // species features. Hybrid: if the species has a `sprite` URL we render that
 // instead, so your pixel art drops in per-character with no rework.
-const RocAvatar = ({ roc, size = 96, beltColor }) => {
+const RocAvatar = ({ roc, size = 96, beltColor, idle = false, poke = false }) => {
   const sp = SPECIES[roc?.species] || {};
-  if (sp.sprite) return <img src={sp.sprite} width={size} height={size} alt={roc?.name || sp.name} style={{ imageRendering: 'pixelated' }} />;
+  const cls = poke ? 'roc-pop' : idle ? 'roc-idle' : undefined;
+  if (sp.sprite) return <img className={cls} src={sp.sprite} width={size} height={size} alt={roc?.name || sp.name} style={{ imageRendering: 'pixelated' }} />;
 
   const c = hexFor(roc?.color || sp.color || 'emerald');
   const belt = hexFor(beltColor || roc?.color || 'amber');
@@ -16,7 +17,7 @@ const RocAvatar = ({ roc, size = 96, beltColor }) => {
   const eq = roc?.wardrobe?.equipped || [];
 
   return (
-    <svg viewBox="0 0 100 100" width={size} height={size} role="img" aria-label={roc?.name || 'Roc'}>
+    <svg className={cls} viewBox="0 0 100 100" width={size} height={size} role="img" aria-label={roc?.name || 'Roc'}>
       <defs>
         <radialGradient id={`g${roc?.id || 'x'}`} cx="50%" cy="38%" r="70%">
           <stop offset="0%" stopColor={c.base} />

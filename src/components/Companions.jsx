@@ -1,28 +1,32 @@
 import React, { useState } from 'react';
-import { Award, Check, Plus, Pencil, Sparkles } from 'lucide-react';
+import { Award, Check, Plus, Pencil, Sparkles, MapPin, Lock } from 'lucide-react';
 import RocAvatar from './RocAvatar';
-import { BESTIARY, SPECIES, STARTER_KEYS, RARITIES, PERSONAS, makeRoc, rocBelt, unlockedAbilities, availablePersonas, ownedCosmetics } from '../lib/rocs';
+import { BESTIARY, SPECIES, RARITIES, PERSONAS, makeRoc, rocBelt, unlockedAbilities, availablePersonas, ownedCosmetics, rocMastery, collectionProgress, speciesUnlocked, SPECIES_UNLOCK } from '../lib/rocs';
+import { BELTS } from '../lib/rank';
 import { themeFor } from '../lib/theme';
 
 // Your stable of Rocs: see them, pick the active one (travels with you + powers
 // chat), rename, switch personality, and adopt a free starter.
-const Companions = ({ rocs = {}, activeRocId, onSetActive, onRename, onSetPersona, onAdopt, onEquip }) => {
+const Companions = ({ rocs = {}, accountXp = 0, currentGym, activeRocId, onSetActive, onRename, onSetPersona, onAdopt, onEquip }) => {
   const list = Object.values(rocs);
   const active = rocs[activeRocId];
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(active?.name || '');
-  const owned = new Set(list.map((r) => r.species));
+  const { owned: ownedCount, total, ownedSet: owned } = collectionProgress(rocs);
 
   const theme = themeFor(active?.color || 'emerald');
+  const mastery = active ? rocMastery(active) : [];
+  const [poke, setPoke] = useState(false);
+  const pokeRoc = () => { setPoke(true); setTimeout(() => setPoke(false), 520); };
 
   return (
     <div className="space-y-5">
       {active && (
         <div className="hud bg-zinc-900 border border-zinc-800 rounded-3xl p-6">
           <div className="flex items-center gap-4">
-            <div className={`w-24 h-24 rounded-3xl bg-zinc-950 border border-zinc-800 flex items-center justify-center ${theme.text}`}>
-              <RocAvatar roc={active} size={84} />
-            </div>
+            <button onClick={pokeRoc} aria-label="Poke your Roc" className={`w-24 h-24 rounded-3xl bg-zinc-950 border border-zinc-800 flex items-center justify-center ${theme.text}`}>
+              <RocAvatar roc={active} size={84} idle={!poke} poke={poke} />
+            </button>
             <div className="min-w-0 flex-1">
               {editing ? (
                 <div className="flex gap-2">
@@ -75,6 +79,23 @@ const Companions = ({ rocs = {}, activeRocId, onSetActive, onRename, onSetPerson
               ))}
             </div>
           </div>
+
+          {mastery.length > 0 && (
+            <div className="mt-4">
+              <div className="text-[10px] uppercase tracking-wide text-zinc-500 mb-1.5">Gym mastery (specialties)</div>
+              <div className="space-y-1.5">
+                {mastery.slice(0, 5).map((m) => (
+                  <div key={m.gym} className="flex items-center justify-between text-xs gap-2">
+                    <span className="text-zinc-300 truncate flex items-center gap-1.5">
+                      {m.name || m.gym}
+                      {currentGym?.id === m.gym && <MapPin size={10} className={theme.text} />}
+                    </span>
+                    <span className={`font-mono ${theme.text}`}>{m.xp} XP</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -96,21 +117,28 @@ const Companions = ({ rocs = {}, activeRocId, onSetActive, onRename, onSetPerson
       </div>
 
       <div className="hud bg-zinc-900 border border-zinc-800 rounded-3xl p-6">
-        <div className="text-sm font-semibold mb-1">Adopt a Roc</div>
-        <p className="text-xs text-zinc-500 mb-3">Free starters. More species unlock as you train and rank up.</p>
+        <div className="flex items-center justify-between mb-1">
+          <div className="text-sm font-semibold">Bestiary</div>
+          <div className="text-xs font-mono text-zinc-500">{ownedCount}/{total} collected</div>
+        </div>
+        <p className="text-xs text-zinc-500 mb-3">Rarer Rocs unlock as your belt climbs across every gym. Train more to recruit them.</p>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {BESTIARY.map((sp) => {
-            const startable = STARTER_KEYS.includes(sp.key);
             const have = owned.has(sp.key);
+            const unlocked = speciesUnlocked(sp.key, accountXp);
             const t = themeFor(sp.color);
+            const needBelt = BELTS[SPECIES_UNLOCK[sp.key] ?? 0]?.name;
             return (
-              <div key={sp.key} className={`rounded-2xl p-3 border text-center ${have ? 'border-zinc-700' : 'border-zinc-800'} ${!startable && !have ? 'opacity-45' : ''}`}>
-                <div className="flex justify-center"><RocAvatar roc={{ species: sp.key, color: sp.color }} size={48} /></div>
+              <div key={sp.key} className={`rounded-2xl p-3 border text-center ${have ? `${t.border}` : 'border-zinc-800'} ${!unlocked && !have ? 'opacity-50' : ''}`}>
+                <div className="flex justify-center relative">
+                  <div className={!unlocked && !have ? 'grayscale opacity-60' : ''}><RocAvatar roc={{ species: sp.key, color: sp.color }} size={48} /></div>
+                  {!unlocked && !have && <Lock size={14} className="absolute top-0 right-2 text-zinc-500" />}
+                </div>
                 <div className="text-[11px] font-semibold truncate mt-1">{sp.name}</div>
                 <div className={`text-[9px] ${t.text}`}>{RARITIES[sp.rarity]?.label}</div>
-                {have ? <div className="text-[9px] text-zinc-600 mt-1">Owned</div>
-                  : startable ? <button onClick={() => onAdopt(makeRoc(sp.key))} className={`mt-1 text-[10px] px-2 py-1 rounded-lg ${t.btn} text-white flex items-center gap-1 mx-auto`}><Plus size={10} /> Adopt</button>
-                  : <div className="text-[9px] text-zinc-600 mt-1">Locked</div>}
+                {have ? <div className="text-[9px] text-zinc-600 mt-1 flex items-center justify-center gap-0.5"><Check size={9} /> Owned</div>
+                  : unlocked ? <button onClick={() => onAdopt(makeRoc(sp.key))} className={`mt-1 text-[10px] px-2 py-1 rounded-lg ${t.btn} text-white flex items-center gap-1 mx-auto`}><Plus size={10} /> Recruit</button>
+                  : <div className="text-[9px] text-zinc-600 mt-1">{needBelt}</div>}
               </div>
             );
           })}

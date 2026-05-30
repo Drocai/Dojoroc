@@ -125,7 +125,11 @@ function App() {
         const before = (cur.xp || 0) + (cur.bonusXp || 0);
         const after = ((patch.xp ?? cur.xp) || 0) + ((patch.bonusXp ?? cur.bonusXp) || 0);
         const gain = Math.max(0, after - before);
-        if (gain) next.rocs = { ...d.rocs, [aid]: { ...d.rocs[aid], xp: (d.rocs[aid].xp || 0) + gain } };
+        if (gain) {
+          const r = d.rocs[aid];
+          const trained = { ...(r.trained || {}), [ROOM_ID]: { xp: ((r.trained || {})[ROOM_ID]?.xp || 0) + gain, name: brand.title } };
+          next.rocs = { ...d.rocs, [aid]: { ...r, xp: (r.xp || 0) + gain, trained } };
+        }
       }
       return next;
     });
@@ -281,6 +285,8 @@ function App() {
           <div className="max-w-2xl mx-auto">
             <Companions
               rocs={rocs}
+              accountXp={crossTotal}
+              currentGym={{ id: ROOM_ID, name: brand.title }}
               activeRocId={data.activeRocId}
               onSetActive={(id) => updateData((d) => ({ ...d, activeRocId: id }))}
               onRename={(id, name) => updateRoc(id, { name })}

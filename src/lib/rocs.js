@@ -36,6 +36,20 @@ export const SPECIES = Object.fromEntries(BESTIARY.map((s) => [s.key, s]));
 // Free starters anyone can adopt now; the rest unlock via play later.
 export const STARTER_KEYS = ['zen-pebble', 'makiwara-rock', 'nunchuck-rocks', 'bo-staffali'];
 
+// Belt tier (account-wide) needed to unlock each species for adoption. Starters
+// are 0. Rarer Rocs unlock as you rank up across all your gyms — collection
+// through play. (Maps onto the shared belt ladder in rank.js.)
+export const SPECIES_UNLOCK = {
+  'zen-pebble': 0, 'makiwara-rock': 0, 'nunchuck-rocks': 0, 'bo-staffali': 0,
+  'pa-geode': 2, 'smash-boulder': 3, 'sumo-bava': 4,
+  'ninja-obsidian': 5, 'guardian-gargoyle': 6, 'sensei-stone': 8,
+};
+
+// Is a species adoptable given the account's total XP (across all gyms)?
+export function speciesUnlocked(key, accountXp = 0) {
+  return beltIndex(accountXp) >= (SPECIES_UNLOCK[key] ?? 0);
+}
+
 // Personalities — toggleable voices injected into the chat system prompt.
 export const PERSONAS = {
   'calm-sensei': { label: 'Calm Sensei', emoji: '🧘', note: 'patient, grounded', prompt: 'Speak calmly and patiently, like a wise sensei. One small step at a time, warm and encouraging.' },
@@ -112,6 +126,20 @@ export function makeRoc(speciesKey, name, color) {
 export const rocBelt = (roc) => rankFor(roc?.xp || 0);
 export const rocTier = (roc) => beltIndex(roc?.xp || 0);
 export const unlockedAbilities = (roc) => ABILITIES.filter((a) => rocTier(roc) >= a.belt);
+
+// Gyms this Roc has trained in (with XP each), best first — its specialties.
+export function rocMastery(roc) {
+  return Object.entries(roc?.trained || {})
+    .map(([gym, v]) => ({ gym, xp: v?.xp || 0 }))
+    .filter((m) => m.xp > 0)
+    .sort((a, b) => b.xp - a.xp);
+}
+
+// How many species are owned vs total — collection progress.
+export function collectionProgress(rocs = {}) {
+  const owned = new Set(Object.values(rocs).map((r) => r.species));
+  return { owned: owned.size, total: BESTIARY.length, ownedSet: owned };
+}
 
 // Persona + per-Roc memory block prepended to the chat system prompt.
 export function buildRocPrompt(roc, { roomName, roomSubject } = {}) {
