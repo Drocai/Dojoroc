@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, MessageSquare } from 'lucide-react';
+import { Send, MessageSquare, Brain, Plus, Check, Loader2 } from 'lucide-react';
 import { MODEL_OPTIONS, MODE_OPTIONS, CHAT_ENDPOINT } from '../lib/quency';
 import { activePack } from '../../packs/index.js';
 import { themeFor } from '../lib/theme';
@@ -7,14 +7,55 @@ import { themeFor } from '../lib/theme';
 const { sensei, modes, modelOptions } = activePack;
 const accent = themeFor(activePack.brand.accent);
 
-const QuencyChat = ({ memory = '', displayName }) => {
+const QuencyChat = ({ memory = '', displayName, onRemember }) => {
   const greeting = displayName ? `Welcome back, ${displayName}. ${sensei.greeting}` : sensei.greeting;
   const [messages, setMessages] = useState([{ role: 'quency', text: greeting }]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [model, setModel] = useState(modelOptions[0].key);
   const [mode, setMode] = useState(modes[0].key);
+  const [remembered, setRemembered] = useState({});
+  const [distilling, setDistilling] = useState(false);
   const chatContainerRef = useRef(null);
+
+  const remember = (i, text) => {
+    if (!onRemember || remembered[i]) return;
+    onRemember(text.slice(0, 200));
+    setRemembered((r) => ({ ...r, [i]: true }));
+  };
+
+  // Ask Quency to distill durable facts from the conversation into memory.
+  const distill = async () => {
+    if (!onRemember || distilling) return;
+    const transcript = messages
+      .filter((m) => m.role === 'user' || m.role === 'quency')
+      .map((m) => `${m.role === 'user' ? 'Student' : sensei.name}: ${m.text}`)
+      .join('\n')
+      .slice(-4000);
+    if (transcript.length < 20) return;
+    setDistilling(true);
+    try {
+      const res = await fetch(CHAT_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: `From this tutoring chat, extract up to 3 short, durable facts about the STUDENT worth remembering next time (their preferences, goals, or what they just learned). Reply ONLY as a JSON array of short strings.\n\n${transcript}`,
+          model: 'haiku',
+          system: 'You output only a compact JSON array of short plain strings. No prose.',
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      let txt = String(data.reply || '').trim().replace(/^```(json)?/i, '').replace(/```$/, '');
+      txt = txt.slice(txt.indexOf('['), txt.lastIndexOf(']') + 1);
+      const facts = JSON.parse(txt);
+      if (Array.isArray(facts)) facts.slice(0, 3).forEach((f) => typeof f === 'string' && onRemember(f.slice(0, 200)));
+      setMessages((prev) => [...prev, { role: 'system', text: `Saved ${Math.min(3, facts.length)} thing(s) to your ${sensei.name}'s memory.` }]);
+    } catch {
+      setMessages((prev) => [...prev, { role: 'system', text: "Couldn't distill that chat — try again." }]);
+    } finally {
+      setDistilling(false);
+    }
+  };
 
   const scrollToBottom = () => {
     if (chatContainerRef.current) {
@@ -73,6 +114,16 @@ const QuencyChat = ({ memory = '', displayName }) => {
           <div className="font-semibold tracking-tight">{sensei.name}</div>
           <div className={`text-[10px] -mt-0.5 ${accent.textSoft}`}>{sensei.title}</div>
         </div>
+        {onRemember && (
+          <button
+            onClick={distill}
+            disabled={distilling}
+            title="Save what you learned into Quency's memory"
+            className={`text-[11px] px-2.5 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 ${accent.text} flex items-center gap-1 disabled:opacity-50`}
+          >
+            {distilling ? <Loader2 size={12} className="animate-spin" /> : <Brain size={12} />} Teach from chat
+          </button>
+        )}
       </div>
 
       <div className="px-4 py-3 border-b border-zinc-800 flex flex-wrap gap-2 bg-zinc-950/30">
@@ -98,7 +149,7 @@ const QuencyChat = ({ memory = '', displayName }) => {
 
       <div ref={chatContainerRef} className="flex-1 p-5 overflow-y-auto space-y-4 bg-zinc-950/30">
         {messages.map((msg, i) => (
-          <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+          <div key={i} className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
             <div
               className={`max-w-[82%] px-4 py-3 rounded-3xl text-sm whitespace-pre-wrap ${
                 msg.role === 'user'
@@ -110,6 +161,15 @@ const QuencyChat = ({ memory = '', displayName }) => {
             >
               {msg.text}
             </div>
+            {onRemember && msg.role === 'quency' && i > 0 && (
+              <button
+                onClick={() => remember(i, msg.text)}
+                disabled={remembered[i]}
+                className="mt-1 text-[10px] text-zinc-500 hover:text-zinc-300 flex items-center gap-1 disabled:text-emerald-400"
+              >
+                {remembered[i] ? <Check size={11} /> : <Plus size={11} />} {remembered[i] ? 'Remembered' : 'Remember this'}
+              </button>
+            )}
           </div>
         ))}
         {isTyping && <div className={`${accent.text} text-xs`}>{sensei.name} is thinking...</div>}

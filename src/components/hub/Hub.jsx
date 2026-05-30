@@ -5,6 +5,7 @@ import { BUILTIN_PACKS, activePack, enterPackData } from '../../../packs/index.j
 import { deletePack } from '../../lib/profile';
 import { themeFor } from '../../lib/theme';
 import RoomBuilder from './RoomBuilder';
+import Leaderboard from './Leaderboard';
 
 const accent = themeFor(activePack.brand.accent);
 
@@ -61,6 +62,8 @@ const Hub = ({ onClose, profile }) => {
           <X size={18} />
         </button>
       </div>
+
+      <Leaderboard meUsername={profile?.username} onPick={(u) => { window.location.href = `/?u=${encodeURIComponent(u)}`; }} />
 
       {loading ? (
         <div className="flex items-center gap-2 text-zinc-400 text-sm py-12 justify-center">

@@ -14,6 +14,7 @@ import Profile from './components/Profile';
 import MyQuency from './components/MyQuency';
 import Toolkit from './components/Toolkit';
 import RecoveryModal from './components/RecoveryModal';
+import PublicProfile from './components/PublicProfile';
 import { activePack } from '../packs/index.js';
 import { themeFor } from './lib/theme';
 import { rankFor } from './lib/rank';
@@ -50,6 +51,12 @@ function App() {
   const { profile, ready, signUp, login, reset, logout, updateData, pendingRecovery, clearRecovery } = useAuth();
   const [view, setView] = useState('missions');
   const [showHub, setShowHub] = useState(false);
+  const [publicUser] = useState(() =>
+    typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('u') : null
+  );
+
+  // A shared portfolio link (/?u=name) is public — show it without sign-in.
+  if (publicUser) return <PublicProfile username={publicUser} />;
 
   if (!ready) {
     return (
@@ -208,6 +215,13 @@ function App() {
             <QuencyChat
               displayName={me.label}
               memory={buildMemoryBlock({ displayName: me.label, quency: data.quency, techniques: data.techniques, roomName: brand.title, roomSubject: activePack.subject })}
+              onRemember={(fact) =>
+                updateData((d) => {
+                  const q = d.quency || {};
+                  const facts = [...(q.facts || []), fact].filter((v, x, a) => a.indexOf(v) === x).slice(0, 40);
+                  return { ...d, quency: { ...q, facts } };
+                })
+              }
             />
           </div>
         )}

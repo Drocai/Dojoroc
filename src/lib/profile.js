@@ -41,3 +41,5 @@ export const reset = (username, code, newPassword) =>
   rpc('dojo_reset', { p_username: username, p_code: code, p_new_password: newPassword });
 export const deletePack = (id, username, token) =>
   rpc('dojo_delete_pack', { p_id: id, p_username: username, p_token: token });
+export const leaderboard = () => rpc('dojo_leaderboard', {});
+export const publicProfile = (username) => rpc('dojo_public_profile', { p_username: username });

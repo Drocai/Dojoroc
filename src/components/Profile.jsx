@@ -1,5 +1,5 @@
-import React from 'react';
-import { Award, Flame, LogOut, DoorClosed } from 'lucide-react';
+import React, { useState } from 'react';
+import { Award, Flame, LogOut, DoorClosed, Share2, Check } from 'lucide-react';
 import { themeFor } from '../lib/theme';
 import { GAMES } from '../lib/arcade';
 
@@ -8,6 +8,15 @@ import { GAMES } from '../lib/arcade';
 const Profile = ({ profile, rank, crossTotal, rooms, scores, onLogout }) => {
   const theme = themeFor(profile.color);
   const roomEntries = Object.entries(rooms || {});
+  const [shared, setShared] = useState(false);
+
+  const share = () => {
+    const url = `${window.location.origin}/?u=${encodeURIComponent(profile.username)}`;
+    navigator.clipboard?.writeText(url).then(() => {
+      setShared(true);
+      setTimeout(() => setShared(false), 1800);
+    });
+  };
 
   return (
     <div className="max-w-2xl mx-auto space-y-5">
@@ -79,12 +88,20 @@ const Profile = ({ profile, rank, crossTotal, rooms, scores, onLogout }) => {
         </div>
       </div>
 
-      <button
-        onClick={onLogout}
-        className="w-full px-4 py-3 rounded-2xl bg-zinc-900 border border-zinc-800 hover:border-rose-800 text-sm text-zinc-300 flex items-center justify-center gap-2"
-      >
-        <LogOut size={15} /> Log out
-      </button>
+      <div className="flex gap-2">
+        <button
+          onClick={share}
+          className={`flex-1 px-4 py-3 rounded-2xl bg-zinc-900 border border-zinc-800 hover:border-zinc-600 text-sm text-zinc-200 flex items-center justify-center gap-2`}
+        >
+          {shared ? <Check size={15} className={theme.text} /> : <Share2 size={15} />} {shared ? 'Link copied!' : 'Share portfolio'}
+        </button>
+        <button
+          onClick={onLogout}
+          className="px-4 py-3 rounded-2xl bg-zinc-900 border border-zinc-800 hover:border-rose-800 text-sm text-zinc-300 flex items-center justify-center gap-2"
+        >
+          <LogOut size={15} /> Log out
+        </button>
+      </div>
     </div>
   );
 };

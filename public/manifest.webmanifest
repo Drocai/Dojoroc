@@ -1,0 +1,14 @@
+{
+  "name": "Frequency Dojo",
+  "short_name": "Dojo",
+  "description": "An AI dojo where you train, learn, and build — your sensei travels with you.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0a0a0f",
+  "theme_color": "#0a0a0f",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
