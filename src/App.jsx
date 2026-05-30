@@ -16,7 +16,7 @@ import PublicProfile from './components/PublicProfile';
 import BeltUp from './components/BeltUp';
 import Companions from './components/Companions';
 import RocAvatar from './components/RocAvatar';
-import { ensureRocs, buildRocPrompt } from './lib/rocs';
+import { ensureRocs, buildRocPrompt, unlockedAbilities } from './lib/rocs';
 // Hub (rooms grid + builder + leaderboard) is code-split — only loads on demand.
 const Hub = lazy(() => import('./components/hub/Hub'));
 import { activePack } from '../packs/index.js';
@@ -186,8 +186,8 @@ function App() {
             onClick={() => { setShowHub(false); setView('profile'); }}
             className={`pl-2 pr-3 py-1.5 rounded-2xl text-sm flex items-center gap-2 ${theme.solid} text-white`}
           >
-            <span className="w-6 h-6 rounded-full bg-black/25 flex items-center justify-center text-xs font-black">
-              {(me.label || me.key || '?').slice(0, 1).toUpperCase()}
+            <span className="w-6 h-6 rounded-full bg-black/25 flex items-center justify-center text-xs font-black overflow-hidden">
+              {activeRoc ? <RocAvatar roc={activeRoc} size={24} /> : (me.label || me.key || '?').slice(0, 1).toUpperCase()}
             </span>
             <span className="hidden sm:flex flex-col items-start leading-none">
               <span className="text-xs font-semibold">{me.label}</span>
@@ -264,6 +264,9 @@ function App() {
               memory={(activeRoc
                 ? buildRocPrompt(activeRoc, { roomName: brand.title, roomSubject: activePack.subject })
                 : buildMemoryBlock({ displayName: me.label, quency: data.quency, techniques: data.techniques, roomName: brand.title, roomSubject: activePack.subject }))}
+              roc={activeRoc}
+              abilities={activeRoc ? unlockedAbilities(activeRoc) : []}
+              onSetPersona={(id, persona) => updateRoc(id, { persona })}
               onRemember={(fact) =>
                 activeRoc && updateData((d) => {
                   const roc = d.rocs[d.activeRocId];
@@ -283,6 +286,12 @@ function App() {
               onRename={(id, name) => updateRoc(id, { name })}
               onSetPersona={(id, persona) => updateRoc(id, { persona })}
               onAdopt={(roc) => updateData((d) => ({ ...d, rocs: { ...(d.rocs || {}), [roc.id]: roc }, activeRocId: roc.id }))}
+              onEquip={(id, key) => updateData((d) => {
+                const roc = d.rocs[id];
+                const cur = roc.wardrobe?.equipped || [];
+                const equipped = cur.includes(key) ? cur.filter((k) => k !== key) : [...cur, key];
+                return { ...d, rocs: { ...d.rocs, [id]: { ...roc, wardrobe: { ...roc.wardrobe, equipped } } } };
+              })}
             />
           </div>
         )}

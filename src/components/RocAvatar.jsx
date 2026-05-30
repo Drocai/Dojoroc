@@ -13,6 +13,7 @@ const RocAvatar = ({ roc, size = 96, beltColor }) => {
   const belt = hexFor(beltColor || roc?.color || 'amber');
   const f = sp.feature;
   const eye = '#0a0a0f';
+  const eq = roc?.wardrobe?.equipped || [];
 
   return (
     <svg viewBox="0 0 100 100" width={size} height={size} role="img" aria-label={roc?.name || 'Roc'}>
@@ -40,6 +41,13 @@ const RocAvatar = ({ roc, size = 96, beltColor }) => {
       {f === 'beard' && <path d="M36 70 Q50 92 66 70 Q58 80 50 80 Q42 80 36 70 Z" fill="#e5e7eb" opacity="0.85" />}
       {f === 'staff' && <rect x="80" y="20" width="4" height="60" rx="2" fill={c.dark} transform="rotate(12 82 50)" />}
       {f === 'nunchuck' && <><circle cx="84" cy="40" r="4" fill={c.dark} /><circle cx="88" cy="54" r="4" fill={c.dark} /></>}
+      {/* equipped wardrobe cosmetics */}
+      {eq.includes('headband') && <rect x="30" y="30" width="40" height="5" rx="2.5" fill={belt.base} />}
+      {eq.includes('shades') && <g><rect x="34" y="42" width="13" height="9" rx="2" fill="#0a0a0f" /><rect x="55" y="42" width="13" height="9" rx="2" fill="#0a0a0f" /><rect x="47" y="45" width="8" height="2" fill="#0a0a0f" /></g>}
+      {eq.includes('scarf') && <path d="M28 70 Q50 78 74 70 L72 78 Q50 84 30 78 Z" fill={belt.base} />}
+      {eq.includes('cape') && <path d="M24 36 Q10 70 30 84 L36 80 Q26 60 32 38 Z" fill={c.deep} opacity="0.9" />}
+      {eq.includes('halo') && <ellipse cx="51" cy="8" rx="16" ry="4" fill="none" stroke="#fde047" strokeWidth="2.5" />}
+      {eq.includes('crown') && <path d="M36 16 L40 6 L46 13 L51 4 L56 13 L62 6 L66 16 Z" fill="#fbbf24" stroke="#b45309" strokeWidth="1" />}
     </svg>
   );
 };

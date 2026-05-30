@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { Award, Check, Plus, Pencil, Sparkles } from 'lucide-react';
 import RocAvatar from './RocAvatar';
-import { BESTIARY, SPECIES, STARTER_KEYS, RARITIES, PERSONAS, makeRoc, rocBelt, unlockedAbilities } from '../lib/rocs';
+import { BESTIARY, SPECIES, STARTER_KEYS, RARITIES, PERSONAS, makeRoc, rocBelt, unlockedAbilities, availablePersonas, ownedCosmetics } from '../lib/rocs';
 import { themeFor } from '../lib/theme';
 
 // Your stable of Rocs: see them, pick the active one (travels with you + powers
 // chat), rename, switch personality, and adopt a free starter.
-const Companions = ({ rocs = {}, activeRocId, onSetActive, onRename, onSetPersona, onAdopt }) => {
+const Companions = ({ rocs = {}, activeRocId, onSetActive, onRename, onSetPersona, onAdopt, onEquip }) => {
   const list = Object.values(rocs);
   const active = rocs[activeRocId];
   const [editing, setEditing] = useState(false);
@@ -42,12 +42,28 @@ const Companions = ({ rocs = {}, activeRocId, onSetActive, onRename, onSetPerson
           <div className="mt-4">
             <div className="text-[10px] uppercase tracking-wide text-zinc-500 mb-1.5">Personality</div>
             <div className="flex flex-wrap gap-1.5">
-              {(active.personas || []).map((pk) => (
+              {availablePersonas(active).map((pk) => (
                 <button key={pk} onClick={() => onSetPersona(active.id, pk)}
                   className={`text-xs px-2.5 py-1.5 rounded-full border ${active.persona === pk ? `${theme.solid} text-white border-transparent` : 'bg-white/5 border-zinc-700 text-zinc-300'}`}>
                   {PERSONAS[pk]?.emoji} {PERSONAS[pk]?.label}
                 </button>
               ))}
+            </div>
+          </div>
+
+          <div className="mt-4">
+            <div className="text-[10px] uppercase tracking-wide text-zinc-500 mb-1.5">Wardrobe</div>
+            <div className="flex flex-wrap gap-1.5">
+              {ownedCosmetics(active).length === 0 && <span className="text-xs text-zinc-600">Rank up to unlock gear.</span>}
+              {ownedCosmetics(active).map((w) => {
+                const on = (active.wardrobe?.equipped || []).includes(w.key);
+                return (
+                  <button key={w.key} onClick={() => onEquip(active.id, w.key)}
+                    className={`text-xs px-2.5 py-1.5 rounded-full border ${on ? `${theme.solid} text-white border-transparent` : 'bg-white/5 border-zinc-700 text-zinc-300'}`}>
+                    {on ? '✓ ' : ''}{w.label}
+                  </button>
+                );
+              })}
             </div>
           </div>
 

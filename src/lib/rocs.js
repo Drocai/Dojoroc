@@ -54,6 +54,40 @@ export const ABILITIES = [
   { key: 'distill', label: 'Imprint', desc: 'Save what you learned to memory.', belt: 6 },
 ];
 
+// Extra personalities a Roc unlocks as its belt climbs (beyond its innate one).
+export const PERSONA_UNLOCKS = ['hype-coach', 'trickster', 'calm-sensei', 'strict-master', 'curious'];
+
+// Personalities available to a Roc now: its innate one + ones unlocked by tier.
+export function availablePersonas(roc) {
+  const set = new Set(roc?.personas || []);
+  const sp = SPECIES[roc?.species];
+  if (sp) set.add(sp.persona);
+  const tier = rocTier(roc);
+  PERSONA_UNLOCKS.slice(0, Math.min(PERSONA_UNLOCKS.length, Math.floor(tier / 2))).forEach((p) => set.add(p));
+  return [...set];
+}
+
+// One-tap ability → prompt template the Roc runs. 'imprint' is handled inline.
+export const ABILITY_PROMPTS = {
+  explain: 'Re-explain the last thing simply, like I am 10, with a quick example.',
+  quiz: 'Quiz me with 3 short questions on what we are learning. Ask them one at a time and wait for my answer.',
+  hint: 'Give me a small hint to move forward — not the full answer.',
+  challenge: 'Set me a slightly harder practice challenge on this topic, with clear success criteria.',
+};
+
+// Wardrobe — cosmetic layers RocAvatar can draw, unlocked by belt tier. Owned
+// automatically once the tier is reached; equip is stored on roc.wardrobe.
+export const WARDROBE = [
+  { key: 'headband', label: 'Headband', belt: 0, slot: 'head' },
+  { key: 'shades', label: 'Shades', belt: 1, slot: 'face' },
+  { key: 'scarf', label: 'Scarf', belt: 2, slot: 'neck' },
+  { key: 'cape', label: 'Cape', belt: 3, slot: 'back' },
+  { key: 'halo', label: 'Halo', belt: 5, slot: 'head' },
+  { key: 'crown', label: 'Crown', belt: 7, slot: 'head' },
+];
+
+export const ownedCosmetics = (roc) => WARDROBE.filter((w) => rocTier(roc) >= w.belt);
+
 let _seq = 0;
 const newId = () => `roc_${Date.now().toString(36)}${(_seq++).toString(36)}`;
 

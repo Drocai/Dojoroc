@@ -3,6 +3,8 @@ import { Send, MessageSquare, Brain, Plus, Check, Loader2 } from 'lucide-react';
 import { MODEL_OPTIONS, MODE_OPTIONS, CHAT_ENDPOINT } from '../lib/quency';
 import { activePack } from '../../packs/index.js';
 import { themeFor } from '../lib/theme';
+import { ABILITY_PROMPTS, PERSONAS, availablePersonas } from '../lib/rocs';
+import RocAvatar from './RocAvatar';
 
 const { sensei, modes, modelOptions } = activePack;
 const accent = themeFor(activePack.brand.accent);
@@ -13,7 +15,8 @@ const STARTERS = [
   `Quiz me on ${activePack.subject || 'this room'}`,
 ].filter(Boolean).slice(0, 3);
 
-const QuencyChat = ({ memory = '', displayName, onRemember }) => {
+const QuencyChat = ({ memory = '', displayName, onRemember, roc, abilities = [], onSetPersona }) => {
+  const who = roc?.name || sensei.name;
   const greeting = displayName ? `Welcome back, ${displayName}. ${sensei.greeting}` : sensei.greeting;
   const [messages, setMessages] = useState([{ role: 'quency', text: greeting }]);
   const [input, setInput] = useState('');
@@ -78,6 +81,15 @@ const QuencyChat = ({ memory = '', displayName, onRemember }) => {
     }
   };
 
+  // Belt-gated ability buttons: 'imprint' distills memory, the rest fire a
+  // templated prompt the Roc answers in character.
+  const runAbility = (key) => {
+    if (isTyping) return;
+    if (key === 'distill') return distill();
+    const t = ABILITY_PROMPTS[key];
+    if (t) sendMessage(t);
+  };
+
   const scrollToBottom = () => {
     if (chatContainerRef.current) {
       chatContainerRef.current.scrollTo({ top: chatContainerRef.current.scrollHeight, behavior: 'smooth' });
@@ -128,12 +140,25 @@ const QuencyChat = ({ memory = '', displayName, onRemember }) => {
   return (
     <div className="bg-zinc-900 border border-zinc-800 rounded-3xl flex flex-col h-[560px] overflow-hidden">
       <div className="px-6 py-4 border-b border-zinc-800 flex items-center gap-3 bg-zinc-950/50">
-        <div className={`w-9 h-9 rounded-2xl border flex items-center justify-center ${accent.avatar}`}>
-          <MessageSquare className={accent.text} size={18} />
+        <div className={`w-9 h-9 rounded-2xl border flex items-center justify-center overflow-hidden ${accent.avatar}`}>
+          {roc ? <RocAvatar roc={roc} size={34} /> : <MessageSquare className={accent.text} size={18} />}
         </div>
-        <div className="flex-1">
-          <div className="font-semibold tracking-tight">{sensei.name}</div>
-          <div className={`text-[10px] -mt-0.5 ${accent.textSoft}`}>{sensei.title}</div>
+        <div className="flex-1 min-w-0">
+          <div className="font-semibold tracking-tight truncate">{who}</div>
+          {roc && onSetPersona ? (
+            <select
+              value={roc.persona}
+              onChange={(e) => onSetPersona(roc.id, e.target.value)}
+              aria-label="Personality"
+              className={`bg-transparent text-[10px] -mt-0.5 outline-none ${accent.textSoft}`}
+            >
+              {availablePersonas(roc).map((pk) => (
+                <option key={pk} value={pk} className="bg-zinc-900 text-zinc-200">{PERSONAS[pk]?.emoji} {PERSONAS[pk]?.label}</option>
+              ))}
+            </select>
+          ) : (
+            <div className={`text-[10px] -mt-0.5 ${accent.textSoft}`}>{sensei.title}</div>
+          )}
         </div>
         {onRemember && (
           <button
@@ -170,6 +195,22 @@ const QuencyChat = ({ memory = '', displayName, onRemember }) => {
         </select>
       </div>
 
+      {abilities.length > 0 && (
+        <div className="px-4 py-2 border-b border-zinc-800 flex flex-wrap gap-1.5 bg-zinc-950/20">
+          {abilities.map((a) => (
+            <button
+              key={a.key}
+              onClick={() => runAbility(a.key === 'distill' ? 'distill' : a.key)}
+              disabled={isTyping}
+              title={a.desc}
+              className={`text-[11px] px-2.5 py-1.5 rounded-full bg-white/5 hover:bg-white/10 border border-zinc-700 ${accent.text} disabled:opacity-40`}
+            >
+              {a.label}
+            </button>
+          ))}
+        </div>
+      )}
+
       <div ref={chatContainerRef} aria-live="polite" className="flex-1 p-5 overflow-y-auto space-y-4 bg-zinc-950/30">
         {messages.map((msg, i) => (
           <div key={i} className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
@@ -195,7 +236,7 @@ const QuencyChat = ({ memory = '', displayName, onRemember }) => {
             )}
           </div>
         ))}
-        {isTyping && <div className={`${accent.text} text-xs`}>{sensei.name} is thinking...</div>}
+        {isTyping && <div className={`${accent.text} text-xs`}>{who} is thinking...</div>}
       </div>
 
       <div className="p-4 border-t border-zinc-800">
