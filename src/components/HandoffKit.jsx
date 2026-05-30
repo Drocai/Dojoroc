@@ -1,11 +1,18 @@
 import React, { useState } from 'react';
 import { Copy, Sparkles, Download, Send } from 'lucide-react';
-import { QUESTION_GROUPS, buildBlocks, generateSheet } from '../lib/handoff';
 import { CHAT_ENDPOINT } from '../lib/quency';
 import { supabase } from '../lib/supabase';
+import { activePack } from '../../packs/index.js';
+import { themeFor } from '../lib/theme';
+
+const { handoff, modes } = activePack;
+const accent = themeFor(activePack.brand.accent);
+// The Data-Translator-style mode (used to polish answers); fall back to the
+// last mode or the first if none is named that.
+const translatorMode = (modes.find((m) => m.key === 'translator') || modes[modes.length - 1] || modes[0]).key;
 
 const HandoffKit = () => {
-  const [answers, setAnswers] = useState({ studentName: 'Graysen' });
+  const [answers, setAnswers] = useState({ studentName: handoff.studentDefault });
   const [sheet, setSheet] = useState('');
   const [status, setStatus] = useState('');
   const [polishing, setPolishing] = useState(false);
@@ -13,7 +20,7 @@ const HandoffKit = () => {
   const set = (id, value) => setAnswers((a) => ({ ...a, [id]: value }));
 
   const generate = () => {
-    setSheet(generateSheet(answers));
+    setSheet(handoff.generateSheet(answers));
     setStatus('Sheet generated below. Copy each block into Claude.');
   };
 
@@ -22,12 +29,12 @@ const HandoffKit = () => {
   };
 
   const download = () => {
-    const text = sheet || generateSheet(answers);
+    const text = sheet || handoff.generateSheet(answers);
     const blob = new Blob([text], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'frequency-dojo-handoff-sheet.txt';
+    a.download = `${activePack.id}-handoff-sheet.txt`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -36,25 +43,17 @@ const HandoffKit = () => {
   // clean preferences block — the same proxy that powers the chat.
   const aiPolish = async () => {
     setPolishing(true);
-    setStatus('Asking Quency to polish the preferences block...');
-    const name = answers.studentName || 'Graysen';
-    const raw = Object.entries(answers)
-      .filter(([k]) => k !== 'studentName')
-      .map(([k, v]) => `${k}: ${v}`)
-      .join('\n');
-    const message =
-      `Translate these raw kid answers into ONE clean, warm "Personal preferences" block (150-220 words) ` +
-      `telling Claude how to help ${name}, who builds Roblox games and is learning to code: short action-first ` +
-      `answers, small working builds, beginner-friendly but not condescending. Output only the block text.\n\n${raw}`;
+    setStatus(`Asking ${activePack.sensei.name} to polish the preferences block...`);
+    const message = handoff.aiPolishPrompt(answers);
     try {
       const res = await fetch(CHAT_ENDPOINT, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message, model: 'sonnet', mode: 'translator' }),
+        body: JSON.stringify({ message, model: 'sonnet', mode: translatorMode, pack: activePack.id }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || `Error ${res.status}`);
-      const base = sheet || generateSheet(answers);
+      const base = sheet || handoff.generateSheet(answers);
       setSheet(`${base}\n\n============================================================\nAI-POLISHED PREFERENCES (review before use)\n============================================================\n${data.reply}\n`);
       setStatus('AI-polished block added to the bottom of the sheet.');
     } catch (err) {
@@ -71,22 +70,22 @@ const HandoffKit = () => {
     }
     setStatus('Submitting packet to Supabase...');
     const { error } = await supabase.from('graysen_handoff_packets').insert({
-      recipient_name: 'Graysen',
+      recipient_name: answers.studentName || handoff.studentDefault,
       source: 'dojo_app',
-      packet: { ...answers, generatedAt: new Date().toISOString() },
+      packet: { ...answers, pack: activePack.id, generatedAt: new Date().toISOString() },
     });
-    setStatus(error ? `Submit failed: ${error.message}` : 'Packet submitted to Dad ✓');
+    setStatus(error ? `Submit failed: ${error.message}` : `Packet submitted to ${activePack.players[0].chatName} ✓`);
   };
 
-  const blocks = buildBlocks(answers);
+  const blocks = handoff.buildBlocks(answers);
 
   return (
     <div className="space-y-6">
       <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-6">
         <h2 className="text-xl font-semibold tracking-tight mb-1">Handoff Kit</h2>
         <p className="text-sm text-zinc-400 mb-5">
-          Graysen answers once. The dojo translates it into Claude preferences, project instructions, and a CLAUDE.md
-          — ready to paste, or send straight to Dad.
+          {handoff.studentDefault} answers once. The dojo translates it into Claude preferences, project instructions,
+          and a CLAUDE.md — ready to paste, or send straight to {activePack.players[0].chatName}.
         </p>
 
         <div className="grid sm:grid-cols-2 gap-4">
@@ -100,9 +99,9 @@ const HandoffKit = () => {
           </div>
         </div>
 
-        {QUESTION_GROUPS.map((group) => (
+        {handoff.questionGroups.map((group) => (
           <fieldset key={group.title} className="mt-5 border border-zinc-800 rounded-2xl p-4">
-            <legend className="px-2 text-xs font-mono uppercase tracking-wide text-emerald-400/80">
+            <legend className={`px-2 text-xs font-mono uppercase tracking-wide ${accent.textSoft}`}>
               {group.title}
             </legend>
             <div className="space-y-3">
@@ -122,7 +121,7 @@ const HandoffKit = () => {
         ))}
 
         <div className="flex flex-wrap gap-2 mt-5">
-          <button onClick={generate} className="px-4 py-2 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-sm font-medium">
+          <button onClick={generate} className={`px-4 py-2 rounded-2xl ${accent.btn} text-sm font-medium`}>
             Generate Sheet
           </button>
           <button onClick={aiPolish} disabled={polishing} className="px-4 py-2 rounded-2xl bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-sm font-medium flex items-center gap-1.5">
@@ -132,10 +131,10 @@ const HandoffKit = () => {
             <Download size={15} /> Download
           </button>
           <button onClick={submit} className="px-4 py-2 rounded-2xl bg-zinc-800 hover:bg-zinc-700 text-sm flex items-center gap-1.5">
-            <Send size={15} /> Send to Dad
+            <Send size={15} /> Send to {activePack.players[0].chatName}
           </button>
         </div>
-        {status && <p className="text-xs text-emerald-400/80 mt-3">{status}</p>}
+        {status && <p className={`text-xs ${accent.textSoft} mt-3`}>{status}</p>}
       </div>
 
       <div className="grid lg:grid-cols-2 gap-4">
@@ -143,7 +142,7 @@ const HandoffKit = () => {
           <div key={b.key} className="bg-zinc-900 border border-zinc-800 rounded-3xl p-5">
             <div className="flex items-center justify-between gap-3 mb-2">
               <h3 className="font-semibold tracking-tight">{b.title}</h3>
-              <button onClick={() => copy(b.body)} className="text-emerald-400 hover:text-emerald-300 text-xs flex items-center gap-1">
+              <button onClick={() => copy(b.body)} className={`${accent.text} hover:opacity-80 text-xs flex items-center gap-1`}>
                 <Copy size={13} /> Copy
               </button>
             </div>
@@ -159,7 +158,7 @@ const HandoffKit = () => {
         <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-5">
           <div className="flex items-center justify-between mb-2">
             <h3 className="font-semibold tracking-tight">Full Setup Sheet</h3>
-            <button onClick={() => copy(sheet)} className="text-emerald-400 hover:text-emerald-300 text-xs flex items-center gap-1">
+            <button onClick={() => copy(sheet)} className={`${accent.text} hover:opacity-80 text-xs flex items-center gap-1`}>
               <Copy size={13} /> Copy All
             </button>
           </div>

@@ -1,6 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 
-const DojoCoreCanvas = ({ hz = 100, size = 240 }) => {
+const DojoCoreCanvas = ({ hz = 100, size = 240, label = 'DOJO CORE', unit = 'HZ' }) => {
   const canvasRef = useRef(null);
   const animationRef = useRef(null);
 
@@ -62,9 +62,9 @@ const DojoCoreCanvas = ({ hz = 100, size = 240 }) => {
     <div className="relative flex flex-col items-center">
       <canvas ref={canvasRef} width={size} height={size} className="drop-shadow-[0_0_30px_rgba(16,185,129,0.15)]" />
       <div className="absolute bottom-6 text-center">
-        <div className="text-[10px] font-mono tracking-[2px] text-emerald-400/70">DOJO CORE</div>
+        <div className="text-[10px] font-mono tracking-[2px] text-emerald-400/70">{label}</div>
         <div className="text-4xl font-black tabular-nums text-white tracking-tighter">{hz}</div>
-        <div className="text-[10px] text-emerald-400/60 -mt-1">HZ</div>
+        <div className="text-[10px] text-emerald-400/60 -mt-1">{unit}</div>
       </div>
     </div>
   );
