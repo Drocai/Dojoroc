@@ -1,16 +1,16 @@
 import React, { useState } from 'react';
 import { activePack } from '../../packs/index.js';
 import { themeFor } from '../lib/theme';
-import { Zap, Trophy, MessageSquare, LayoutGrid, Gamepad2, ArrowRight, Sparkles } from 'lucide-react';
+import { Zap, Trophy, MessageSquare, LayoutGrid, Gamepad2, ArrowRight, Sparkles, Swords } from 'lucide-react';
 
 const accent = themeFor(activePack.brand.accent);
 const { sensei, brand, lore } = activePack;
 
 const TOUR = [
-  { icon: Trophy, title: 'Missions', body: 'Clear real tasks to earn XP, level up your belt, and power your Dojo Core.' },
-  { icon: MessageSquare, title: `${sensei.name} AI`, body: 'Your AI sensei. Switch models + teaching modes and ask anything — anytime, on your own.' },
-  { icon: LayoutGrid, title: 'Rooms', body: `Each room is a teacher. Enter one, or have ${sensei.name} build a brand-new one for anything you want to learn.` },
-  { icon: Gamepad2, title: 'Arcade & Chat', body: 'Two floating buttons live in the bottom corners: the controller (left) for learn-while-you-wait games, and chat (right) to talk to whoever shares your room code.' },
+  { icon: Swords, title: 'Your Roc', body: 'You get a Roc — your own companion you train, dress up, and level up. It earns belts, evolves, learns new powers, and travels with you into every gym.' },
+  { icon: Trophy, title: 'Missions & Quests', body: 'Clear missions and daily quests to earn XP and rank up your belt. Keep a daily streak for bonus rewards.' },
+  { icon: MessageSquare, title: `${sensei.name} AI`, body: 'Your AI sensei. Ask anything, switch its personality, and tap powers like Quiz Me — it remembers you across sessions.' },
+  { icon: LayoutGrid, title: 'Gyms (Rooms)', body: `Each gym is a subject — space, math, art, music & more. Walk your Roc in to train it, or have ${sensei.name} build a brand-new gym for anything you want to learn.` },
 ];
 
 // One-time post-signup tour. The name now comes from the profile.
