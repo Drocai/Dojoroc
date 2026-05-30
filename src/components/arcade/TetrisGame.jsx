@@ -43,7 +43,7 @@ const spawn = () => {
   return { shape: m, color: c, x: Math.floor((COLS - m[0].length) / 2), y: -m.length + 1 };
 };
 
-const TetrisGame = ({ accent }) => {
+const TetrisGame = ({ accent, tips = ARCADE_TIPS, onResult }) => {
   const canvasRef = useRef(null);
   const game = useRef(null);
   const [score, setScore] = useState(0);
@@ -52,6 +52,12 @@ const TetrisGame = ({ accent }) => {
   const [over, setOver] = useState(false);
   const [tip, setTip] = useState('Clear a line to learn something!');
   const scoreRef = useRef(0);
+  // Read these through refs so the game loop callbacks stay stable (changing
+  // props must NOT recreate the loop or it would reset the board).
+  const tipsRef = useRef(tips);
+  tipsRef.current = tips;
+  const onResultRef = useRef(onResult);
+  onResultRef.current = onResult;
 
   const draw = useCallback(() => {
     const ctx = canvasRef.current?.getContext('2d');
@@ -101,7 +107,7 @@ const TetrisGame = ({ accent }) => {
         g.dropInterval = Math.max(140, 600 - Math.floor(total / 2) * 40);
         return total;
       });
-      setTip(pickRandom(ARCADE_TIPS));
+      setTip(pickRandom(tipsRef.current));
     }
     // Next piece.
     const next = spawn();
@@ -109,6 +115,7 @@ const TetrisGame = ({ accent }) => {
       g.over = true;
       setOver(true);
       setBest(saveScore('tetris', scoreRef.current));
+      onResultRef.current?.(scoreRef.current);
     } else {
       g.piece = next;
     }

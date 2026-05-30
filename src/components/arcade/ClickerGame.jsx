@@ -4,7 +4,7 @@ import { ARCADE_TIPS, saveScore, pickRandom } from '../../lib/arcade';
 
 // Tap the core to score. Tapping fast builds a combo multiplier; every 20 taps
 // flips a flashcard so you learn a little while you grind.
-const ClickerGame = ({ accent }) => {
+const ClickerGame = ({ accent, tips = ARCADE_TIPS, onResult }) => {
   const [score, setScore] = useState(0);
   const [combo, setCombo] = useState(1);
   const [best, setBest] = useState(0);
@@ -13,13 +13,21 @@ const ClickerGame = ({ accent }) => {
   const tapsRef = useRef(0);
   const comboTimer = useRef(null);
   const scoreRef = useRef(0);
+  const onResultRef = useRef(onResult);
+  onResultRef.current = onResult;
 
   useEffect(() => {
     scoreRef.current = score;
   }, [score]);
 
-  // Persist the run as a high score when leaving the game.
-  useEffect(() => () => setBest(saveScore('clicker', scoreRef.current)), []);
+  // Persist + report the run when leaving the game.
+  useEffect(
+    () => () => {
+      setBest(saveScore('clicker', scoreRef.current));
+      onResultRef.current?.(scoreRef.current);
+    },
+    []
+  );
 
   const tap = useCallback(() => {
     setScore((s) => s + combo);
@@ -28,13 +36,13 @@ const ClickerGame = ({ accent }) => {
 
     tapsRef.current += 1;
     if (tapsRef.current % 20 === 0) {
-      setTip(pickRandom(ARCADE_TIPS));
+      setTip(pickRandom(tips));
       setCombo((c) => Math.min(c + 1, 9)); // reward sustained focus
     }
 
     clearTimeout(comboTimer.current);
     comboTimer.current = setTimeout(() => setCombo(1), 1400); // idle resets combo
-  }, [combo]);
+  }, [combo, tips]);
 
   useEffect(() => () => clearTimeout(comboTimer.current), []);
 

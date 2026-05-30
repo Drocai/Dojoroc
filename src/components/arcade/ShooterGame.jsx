@@ -4,14 +4,13 @@ import { ARCADE_QUIZ, saveScore, pickRandom } from '../../lib/arcade';
 
 // A learning shooter: a question shows up top, answer pods drift down. Tap the
 // correct one to "blast" it. Wrong tap or letting the correct pod escape costs
-// a life. Three lives, then game over with a high score.
+// a life. Three lives, then game over. Pods fall faster as your score climbs.
 
-const SPEED = 0.22; // % of play height per tick
+const BASE_SPEED = 0.2; // % of play height per tick
 const TICK = 40; // ms
 
-const newRound = () => {
-  const q = pickRandom(ARCADE_QUIZ);
-  // Build pods (one per answer) at staggered heights + random x lanes.
+const newRound = (quiz) => {
+  const q = pickRandom(quiz);
   const lanes = [12, 38, 62, 86];
   const order = [...q.answers.keys()].sort(() => Math.random() - 0.5);
   const pods = q.answers.map((text, i) => ({
@@ -19,13 +18,13 @@ const newRound = () => {
     text,
     correct: i === q.correct,
     x: lanes[order[i] % lanes.length],
-    y: -10 - i * 22, // staggered entry
+    y: -10 - i * 22,
   }));
   return { q: q.q, pods };
 };
 
-const ShooterGame = ({ accent }) => {
-  const [round, setRound] = useState(newRound);
+const ShooterGame = ({ accent, quiz = ARCADE_QUIZ, onResult }) => {
+  const [round, setRound] = useState(() => newRound(quiz));
   const [pods, setPods] = useState(round.pods);
   const [score, setScore] = useState(0);
   const [lives, setLives] = useState(3);
@@ -33,27 +32,34 @@ const ShooterGame = ({ accent }) => {
   const [over, setOver] = useState(false);
   const [flash, setFlash] = useState(null); // 'hit' | 'miss'
   const scoreRef = useRef(0);
+  const speedRef = useRef(BASE_SPEED);
+  const onResultRef = useRef(onResult);
+  onResultRef.current = onResult;
 
   useEffect(() => {
     scoreRef.current = score;
+    speedRef.current = Math.min(BASE_SPEED * 2.6, BASE_SPEED * (1 + score / 250)); // ramps up
   }, [score]);
+
+  const endGame = useCallback(() => {
+    setOver(true);
+    setBest(saveScore('shooter', scoreRef.current));
+    onResultRef.current?.(scoreRef.current);
+  }, []);
 
   const loseLife = useCallback(() => {
     setLives((l) => {
       const next = l - 1;
-      if (next <= 0) {
-        setOver(true);
-        setBest(saveScore('shooter', scoreRef.current));
-      }
+      if (next <= 0) endGame();
       return next;
     });
-  }, []);
+  }, [endGame]);
 
   const nextRound = useCallback(() => {
-    const r = newRound();
+    const r = newRound(quiz);
     setRound(r);
     setPods(r.pods);
-  }, []);
+  }, [quiz]);
 
   // Falling animation.
   useEffect(() => {
@@ -62,10 +68,10 @@ const ShooterGame = ({ accent }) => {
       setPods((prev) => {
         let lostCorrect = false;
         const moved = prev
-          .map((p) => ({ ...p, y: p.y + SPEED * TICK }))
+          .map((p) => ({ ...p, y: p.y + speedRef.current * TICK }))
           .filter((p) => {
             if (p.y >= 100) {
-              if (p.correct) lostCorrect = true; // the right answer escaped
+              if (p.correct) lostCorrect = true;
               return false;
             }
             return true;
@@ -82,8 +88,6 @@ const ShooterGame = ({ accent }) => {
     }, TICK);
     return () => clearInterval(t);
   }, [over, loseLife, nextRound]);
-
-  useEffect(() => () => saveScore('shooter', scoreRef.current), []);
 
   const shoot = (pod) => {
     if (over) return;

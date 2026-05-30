@@ -25,6 +25,18 @@ const fromPack = activePack.arcade || {};
 export const ARCADE_TIPS = fromPack.tips && fromPack.tips.length ? fromPack.tips : DEFAULT_TIPS;
 export const ARCADE_QUIZ = fromPack.quiz && fromPack.quiz.length ? fromPack.quiz : DEFAULT_QUIZ;
 
+// Build the tip + quiz pool for a focus mission. Mission-specific content
+// (pack.arcade.byMission[id]) is mixed with the general pool so the arcade
+// leans into what you're working on right now but still varies.
+export function poolFor(missionId) {
+  const m = (fromPack.byMission || {})[missionId];
+  if (!m) return { tips: ARCADE_TIPS, quiz: ARCADE_QUIZ };
+  return {
+    tips: [...(m.tips || []), ...ARCADE_TIPS],
+    quiz: [...(m.quiz || []), ...ARCADE_QUIZ],
+  };
+}
+
 export const GAMES = [
   { key: 'clicker', label: 'Focus Forge', tag: 'Clicker', desc: 'Tap to charge the core. Flashcards between combos.' },
   { key: 'shooter', label: 'Quiz Blaster', tag: 'Shooter', desc: 'Shoot the right answer before it lands.' },
