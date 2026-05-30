@@ -14,7 +14,7 @@ In the Stripe Dashboard → Products → add **"Dojo Pro"** with a price
 | `STRIPE_SECRET_KEY` | Stripe → Developers → API keys (`sk_live_…` or `sk_test_…`) |
 | `STRIPE_PRICE_ID` | The Price ID from step 1 (`price_…`) |
 | `STRIPE_WEBHOOK_SECRET` | From step 3 (`whsec_…`) |
-| `PRO_GRANT_SECRET` | `pgs_9c0f5751d0b626df8273fb0cd7682e5f95c35631d2305915` (already stored in the DB) |
+| `PRO_GRANT_SECRET` | Must match `dojo_config.pro_grant_secret` in the DB. Read it with `select value from dojo_config where key='pro_grant_secret';` (or rotate both together). Never commit the literal value. |
 | `SUPABASE_ANON_KEY` | The publishable key (same one the client uses) |
 
 `VITE_SUPABASE_URL` is already set; the webhook reuses it. `PUBLIC_BASE_URL` is

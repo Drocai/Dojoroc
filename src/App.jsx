@@ -15,6 +15,7 @@ import RecoveryModal from './components/RecoveryModal';
 import PublicProfile from './components/PublicProfile';
 import BeltUp from './components/BeltUp';
 import Companions from './components/Companions';
+import Sparring from './components/Sparring';
 import RocAvatar from './components/RocAvatar';
 import RocReaction from './components/RocReaction';
 import { ensureRocs, buildRocPrompt, unlockedAbilities } from './lib/rocs';
@@ -308,7 +309,15 @@ function App() {
           </div>
         )}
         {view === 'rocs' && (
-          <div className="max-w-2xl mx-auto">
+          <div className="max-w-2xl mx-auto space-y-5">
+            <Sparring
+              roc={activeRoc}
+              onWin={(xp) => activeRoc && updateData((d) => {
+                const r = d.rocs[d.activeRocId];
+                if (!r) return d;
+                return { ...d, rocs: { ...d.rocs, [d.activeRocId]: { ...r, xp: (r.xp || 0) + xp } } };
+              })}
+            />
             <Companions
               rocs={rocs}
               accountXp={crossTotal}
