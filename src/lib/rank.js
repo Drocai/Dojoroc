@@ -13,6 +13,15 @@ const BELTS = [
   { min: 9000, name: 'Sensei' },
 ];
 
+export { BELTS };
+
+// Zero-based belt tier for an XP total (used to gate Roc abilities/cosmetics).
+export function beltIndex(xp = 0) {
+  let i = 0;
+  for (let n = 0; n < BELTS.length; n++) if (xp >= BELTS[n].min) i = n;
+  return i;
+}
+
 export function rankFor(xp = 0) {
   let cur = BELTS[0];
   let next = null;

@@ -14,6 +14,9 @@ import Toolkit from './components/Toolkit';
 import RecoveryModal from './components/RecoveryModal';
 import PublicProfile from './components/PublicProfile';
 import BeltUp from './components/BeltUp';
+import Companions from './components/Companions';
+import RocAvatar from './components/RocAvatar';
+import { ensureRocs, buildRocPrompt } from './lib/rocs';
 // Hub (rooms grid + builder + leaderboard) is code-split — only loads on demand.
 const Hub = lazy(() => import('./components/hub/Hub'));
 import { activePack } from '../packs/index.js';
@@ -37,6 +40,7 @@ const GAME_XP_DIV = { clicker: 15, shooter: 3, tetris: 25 };
 const VIEWS = [
   { key: 'missions', label: 'Missions' },
   { key: 'quency', label: `${sensei.name} AI` },
+  { key: 'rocs', label: 'Rocs' },
   { key: 'handoff', label: 'Handoff Kit' },
   { key: 'profile', label: 'Profile' },
 ];
@@ -63,13 +67,15 @@ function App() {
     document.documentElement.style.setProperty('--dojo-rgb', hexFor(brand.accent).rgb);
   }, []);
 
-  // Count today's visit toward the learner's daily streak (once per session).
+  // Count today's visit toward the streak + ensure a Roc roster exists (once).
   useEffect(() => {
     if (!profile || streakRan.current) return;
     streakRan.current = true;
     updateData((d) => {
+      const r = ensureRocs(d);
       const streak = bumpStreak(d.streak);
-      return streak === d.streak ? d : { ...d, streak };
+      if (!r.changed && streak === d.streak) return d;
+      return { ...r.data, streak };
     });
   }, [profile, updateData]);
 
@@ -102,11 +108,26 @@ function App() {
   const focusMission = missions.find((m) => !(prog.tasks || []).includes(m.id)) || null;
   const onboarded = data.onboarded === true;
 
+  // Active Roc (the trainable companion that travels with you + powers chat).
+  const rocs = data.rocs || {};
+  const activeRoc = rocs[data.activeRocId] || Object.values(rocs)[0] || null;
+  const updateRoc = (id, patch) =>
+    updateData((d) => ({ ...d, rocs: { ...(d.rocs || {}), [id]: { ...(d.rocs || {})[id], ...patch } } }));
+
   const updateRoom = (patch) =>
     updateData((d) => {
       const cur = { ...seedRoom, ...((d.rooms || {})[ROOM_ID] || {}) };
       // Stamp the room's friendly name so the portfolio reads cleanly later.
-      return { ...d, rooms: { ...(d.rooms || {}), [ROOM_ID]: { ...cur, ...patch, name: brand.title } } };
+      const next = { ...d, rooms: { ...(d.rooms || {}), [ROOM_ID]: { ...cur, ...patch, name: brand.title } } };
+      // Mirror XP gains onto the active Roc so it ranks up as you train it.
+      const aid = d.activeRocId;
+      if (aid && d.rocs?.[aid]) {
+        const before = (cur.xp || 0) + (cur.bonusXp || 0);
+        const after = ((patch.xp ?? cur.xp) || 0) + ((patch.bonusXp ?? cur.bonusXp) || 0);
+        const gain = Math.max(0, after - before);
+        if (gain) next.rocs = { ...d.rocs, [aid]: { ...d.rocs[aid], xp: (d.rocs[aid].xp || 0) + gain } };
+      }
+      return next;
     });
 
   const toggleTask = (taskId) => {
@@ -240,14 +261,28 @@ function App() {
           <div className="max-w-2xl mx-auto">
             <QuencyChat
               displayName={me.label}
-              memory={buildMemoryBlock({ displayName: me.label, quency: data.quency, techniques: data.techniques, roomName: brand.title, roomSubject: activePack.subject })}
+              memory={(activeRoc
+                ? buildRocPrompt(activeRoc, { roomName: brand.title, roomSubject: activePack.subject })
+                : buildMemoryBlock({ displayName: me.label, quency: data.quency, techniques: data.techniques, roomName: brand.title, roomSubject: activePack.subject }))}
               onRemember={(fact) =>
-                updateData((d) => {
-                  const q = d.quency || {};
-                  const facts = [...(q.facts || []), fact].filter((v, x, a) => a.indexOf(v) === x).slice(0, 40);
-                  return { ...d, quency: { ...q, facts } };
+                activeRoc && updateData((d) => {
+                  const roc = d.rocs[d.activeRocId];
+                  const facts = [...(roc.memory?.facts || []), fact].filter((v, x, a) => a.indexOf(v) === x).slice(0, 40);
+                  return { ...d, rocs: { ...d.rocs, [d.activeRocId]: { ...roc, memory: { ...roc.memory, facts } } } };
                 })
               }
+            />
+          </div>
+        )}
+        {view === 'rocs' && (
+          <div className="max-w-2xl mx-auto">
+            <Companions
+              rocs={rocs}
+              activeRocId={data.activeRocId}
+              onSetActive={(id) => updateData((d) => ({ ...d, activeRocId: id }))}
+              onRename={(id, name) => updateRoc(id, { name })}
+              onSetPersona={(id, persona) => updateRoc(id, { persona })}
+              onAdopt={(roc) => updateData((d) => ({ ...d, rocs: { ...(d.rocs || {}), [roc.id]: roc }, activeRocId: roc.id }))}
             />
           </div>
         )}
