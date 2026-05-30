@@ -23,6 +23,7 @@ import { startProCheckout } from './lib/profile';
 import DailyQuests from './components/DailyQuests';
 import BeatLab from './components/BeatLab';
 import SketchPad from './components/SketchPad';
+import MathSprint from './components/MathSprint';
 import { recordQuest, freshQuests, claimQuest, todaysQuests } from './lib/quests';
 import { streakMultiplier } from './lib/streak';
 // Hub (rooms grid + builder + leaderboard) is code-split — only loads on demand.
@@ -279,6 +280,13 @@ function App() {
                   return next;
                 })}
               />
+              {ROOM_ID === 'number-dojo' && (
+                <MathSprint
+                  accent={brand.accent}
+                  best={data.mathBest || 0}
+                  onFinish={(s) => { trackQuest('arcade'); if (s > (data.mathBest || 0)) updateData((d) => ({ ...d, mathBest: s })); }}
+                />
+              )}
               {ROOM_ID === 'sound-dojo' && <BeatLab accent={brand.accent} onPlay={() => trackQuest('arcade')} />}
               {ROOM_ID === 'art-dojo' && (
                 <SketchPad
