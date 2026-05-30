@@ -427,13 +427,26 @@ function App() {
                   {(data.gallery || []).map((img, i) => (
                     <div key={i} className="relative group">
                       <img src={img} alt={`Sketch ${i + 1}`} className="w-full rounded-xl border border-zinc-800" />
-                      <button
-                        onClick={() => updateData((d) => ({ ...d, gallery: (d.gallery || []).filter((_, x) => x !== i) }))}
-                        className="absolute top-1 right-1 bg-black/70 rounded-full p-1 text-zinc-300 hover:text-rose-400 opacity-0 group-hover:opacity-100"
-                        aria-label="Delete sketch"
-                      >
-                        <Trash2 size={11} />
-                      </button>
+                      <div className="absolute top-1 right-1 flex gap-1 opacity-0 group-hover:opacity-100">
+                        {activeRoc && (
+                          <button
+                            onClick={() => updateRoc(activeRoc.id, { badge: img })}
+                            className="bg-black/70 rounded-full p-1 text-zinc-300 hover:text-emerald-400"
+                            aria-label="Set as Roc badge"
+                            title={`Set as ${activeRoc.name}'s badge`}
+                          >
+                            <Sparkles size={11} />
+                          </button>
+                        )}
+                        <button
+                          onClick={() => updateData((d) => ({ ...d, gallery: (d.gallery || []).filter((_, x) => x !== i) }))}
+                          className="bg-black/70 rounded-full p-1 text-zinc-300 hover:text-rose-400"
+                          aria-label="Delete sketch"
+                        >
+                          <Trash2 size={11} />
+                        </button>
+                      </div>
+                      {activeRoc?.badge === img && <span className="absolute bottom-1 left-1 text-[8px] bg-black/70 rounded px-1 text-emerald-400">badge</span>}
                     </div>
                   ))}
                 </div>

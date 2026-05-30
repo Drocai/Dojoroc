@@ -59,6 +59,14 @@ const RocAvatar = ({ roc, size = 96, beltColor, idle = false, poke = false }) =>
       {eq.includes('cape') && <path d="M24 36 Q10 70 30 84 L36 80 Q26 60 32 38 Z" fill={c.deep} opacity="0.9" />}
       {eq.includes('halo') && <ellipse cx="51" cy="8" rx="16" ry="4" fill="none" stroke="#fde047" strokeWidth="2.5" />}
       {eq.includes('crown') && <path d="M36 16 L40 6 L46 13 L51 4 L56 13 L62 6 L66 16 Z" fill="#fbbf24" stroke="#b45309" strokeWidth="1" />}
+      {/* player-made badge (a saved sketch) pinned to the body */}
+      {roc?.badge && (
+        <g>
+          <circle cx="72" cy="70" r="13" fill="#0a0a0f" stroke={c.base} strokeWidth="1.5" />
+          <clipPath id={`bdg${roc.id || 'x'}`}><circle cx="72" cy="70" r="11.5" /></clipPath>
+          <image href={roc.badge} x="60.5" y="58.5" width="23" height="23" clipPath={`url(#bdg${roc.id || 'x'})`} preserveAspectRatio="xMidYMid slice" />
+        </g>
+      )}
     </svg>
   );
 };
