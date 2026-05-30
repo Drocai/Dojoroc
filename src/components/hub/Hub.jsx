@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Plus, DoorOpen, X, Loader2, Check, Trash2 } from 'lucide-react';
+import { Plus, DoorOpen, X, Loader2, Check, Trash2, Search } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { BUILTIN_PACKS, activePack, enterPackData } from '../../../packs/index.js';
 import { deletePack } from '../../lib/profile';
@@ -16,6 +16,16 @@ const Hub = ({ onClose, profile }) => {
   const [rooms, setRooms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [building, setBuilding] = useState(false);
+  const [query, setQuery] = useState('');
+
+  const q = query.trim().toLowerCase();
+  const filtered = !q
+    ? rooms
+    : rooms.filter((r) =>
+        [r.data?.brand?.title, r.name, r.subject, r.data?.sensei?.name, r.owner]
+          .filter(Boolean)
+          .some((s) => String(s).toLowerCase().includes(q))
+      );
 
   const load = async () => {
     const builtins = BUILTIN_PACKS.map((d) => ({ id: d.id, name: d.name, subject: d.subject, data: d, builtin: true, owner: null }));
@@ -70,6 +80,19 @@ const Hub = ({ onClose, profile }) => {
           <Loader2 className="animate-spin" size={16} /> Loading rooms…
         </div>
       ) : (
+        <>
+        {rooms.length > 4 && (
+          <div className="relative mb-5 max-w-sm">
+            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search rooms by name, subject, sensei…"
+              aria-label="Search rooms"
+              className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl pl-9 pr-3 py-2.5 text-sm outline-none focus:border-zinc-600"
+            />
+          </div>
+        )}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           <button
             onClick={() => setBuilding(true)}
@@ -82,7 +105,7 @@ const Hub = ({ onClose, profile }) => {
             <div className="text-xs text-zinc-500 text-center">Have Quency build a new teacher</div>
           </button>
 
-          {rooms.map((room) => {
+          {filtered.map((room) => {
             const current = room.id === activePack.id;
             const missions = room.data?.missions?.length || 0;
             const sensei = room.data?.sensei?.name || 'Quency';
@@ -123,6 +146,12 @@ const Hub = ({ onClose, profile }) => {
             );
           })}
         </div>
+        {q && filtered.length === 0 && (
+          <div className="text-sm text-zinc-500 py-10 text-center">
+            No rooms match “{query}”. Try a different search, or forge a new one.
+          </div>
+        )}
+        </>
       )}
     </main>
   );

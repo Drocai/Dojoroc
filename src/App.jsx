@@ -1,13 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { useAuth } from './hooks/useAuth';
 import DojoCoreCanvas from './components/DojoCoreCanvas';
 import TrackLane from './components/TrackLane';
 import QuencyChat from './components/QuencyChat';
-import FamilyChat from './components/FamilyChat';
 import HandoffKit from './components/HandoffKit';
 import DockedChat from './components/DockedChat';
 import ArcadeOverlay from './components/arcade/ArcadeOverlay';
-import Hub from './components/hub/Hub';
 import Onboarding from './components/Onboarding';
 import AuthScreen from './components/AuthScreen';
 import Profile from './components/Profile';
@@ -15,11 +13,15 @@ import MyQuency from './components/MyQuency';
 import Toolkit from './components/Toolkit';
 import RecoveryModal from './components/RecoveryModal';
 import PublicProfile from './components/PublicProfile';
+import BeltUp from './components/BeltUp';
+// Hub (rooms grid + builder + leaderboard) is code-split — only loads on demand.
+const Hub = lazy(() => import('./components/hub/Hub'));
 import { activePack } from '../packs/index.js';
-import { themeFor } from './lib/theme';
+import { themeFor, hexFor } from './lib/theme';
 import { rankFor } from './lib/rank';
+import { bumpStreak } from './lib/streak';
 import { buildMemoryBlock } from './lib/quencyMemory';
-import { Zap, Trophy, Flame, Rocket, Gamepad2, Music, BookOpen, Brain, Sparkles, LayoutGrid, Award, Loader2 } from 'lucide-react';
+import { Zap, Trophy, Flame, Rocket, Gamepad2, Music, BookOpen, Brain, Sparkles, LayoutGrid, Award, Loader2, Check } from 'lucide-react';
 
 const BRAND_ICONS = { Zap, Flame, Rocket, Gamepad2, Music, BookOpen, Brain, Sparkles };
 
@@ -35,7 +37,6 @@ const GAME_XP_DIV = { clicker: 15, shooter: 3, tetris: 25 };
 const VIEWS = [
   { key: 'missions', label: 'Missions' },
   { key: 'quency', label: `${sensei.name} AI` },
-  { key: 'family', label: 'Chat' },
   { key: 'handoff', label: 'Handoff Kit' },
   { key: 'profile', label: 'Profile' },
 ];
@@ -48,12 +49,29 @@ const pushLog = (logs, entry) => [entry, ...(logs || [])].slice(0, 12);
 const seedRoom = { tasks: [], xp: 0, bonusXp: 0, scores: {}, logs: [lore.boot] };
 
 function App() {
-  const { profile, ready, signUp, login, reset, logout, updateData, pendingRecovery, clearRecovery } = useAuth();
+  const { profile, ready, saving, signUp, login, reset, logout, updateData, pendingRecovery, clearRecovery } = useAuth();
   const [view, setView] = useState('missions');
   const [showHub, setShowHub] = useState(false);
   const [publicUser] = useState(() =>
     typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('u') : null
   );
+  const streakRan = useRef(false);
+
+  // Tint the whole dojo ambience (scanlines, glow, HUD brackets) to the active
+  // room's accent.
+  useEffect(() => {
+    document.documentElement.style.setProperty('--dojo-rgb', hexFor(brand.accent).rgb);
+  }, []);
+
+  // Count today's visit toward the learner's daily streak (once per session).
+  useEffect(() => {
+    if (!profile || streakRan.current) return;
+    streakRan.current = true;
+    updateData((d) => {
+      const streak = bumpStreak(d.streak);
+      return streak === d.streak ? d : { ...d, streak };
+    });
+  }, [profile, updateData]);
 
   // A shared portfolio link (/?u=name) is public — show it without sign-in.
   if (publicUser) return <PublicProfile username={publicUser} />;
@@ -87,7 +105,8 @@ function App() {
   const updateRoom = (patch) =>
     updateData((d) => {
       const cur = { ...seedRoom, ...((d.rooms || {})[ROOM_ID] || {}) };
-      return { ...d, rooms: { ...(d.rooms || {}), [ROOM_ID]: { ...cur, ...patch } } };
+      // Stamp the room's friendly name so the portfolio reads cleanly later.
+      return { ...d, rooms: { ...(d.rooms || {}), [ROOM_ID]: { ...cur, ...patch, name: brand.title } } };
     });
 
   const toggleTask = (taskId) => {
@@ -127,6 +146,13 @@ function App() {
           </div>
         </div>
         <div className="flex gap-2 items-center">
+          <span
+            className={`hidden sm:flex items-center gap-1 text-[10px] font-mono mr-1 transition-opacity ${saving ? 'text-amber-400 opacity-100' : 'text-zinc-600 opacity-70'}`}
+            title={saving ? 'Saving your progress…' : 'All progress saved'}
+          >
+            {saving ? <Loader2 size={11} className="animate-spin" /> : <Check size={11} />}
+            {saving ? 'Saving' : 'Saved'}
+          </span>
           <button
             onClick={() => setShowHub((v) => !v)}
             className={`px-3 py-2 rounded-2xl text-sm flex items-center gap-1.5 transition-colors ${
@@ -140,7 +166,7 @@ function App() {
             className={`pl-2 pr-3 py-1.5 rounded-2xl text-sm flex items-center gap-2 ${theme.solid} text-white`}
           >
             <span className="w-6 h-6 rounded-full bg-black/25 flex items-center justify-center text-xs font-black">
-              {me.label.slice(0, 1).toUpperCase()}
+              {(me.label || me.key || '?').slice(0, 1).toUpperCase()}
             </span>
             <span className="hidden sm:flex flex-col items-start leading-none">
               <span className="text-xs font-semibold">{me.label}</span>
@@ -184,7 +210,7 @@ function App() {
 
             <div className="lg:col-span-5 space-y-6">
               <div className="hud bg-zinc-900 border border-zinc-800 rounded-3xl p-8">
-                <DojoCoreCanvas hz={hzFor(roomTotal)} size={240} label={brand.coreLabel} unit={brand.coreUnit} />
+                <DojoCoreCanvas hz={hzFor(roomTotal)} size={240} label={brand.coreLabel} unit={brand.coreUnit} accent={brand.accent} />
                 <div className="mt-4 flex items-center justify-center gap-6 text-center">
                   <div>
                     <div className={`text-2xl font-black ${theme.text}`}>{roomTotal}</div>
@@ -225,11 +251,10 @@ function App() {
             />
           </div>
         )}
-        {view === 'family' && <div className="max-w-2xl mx-auto"><FamilyChat displayName={me.label} /></div>}
         {view === 'handoff' && <HandoffKit />}
         {view === 'profile' && (
           <div className="max-w-2xl mx-auto space-y-5">
-            <Profile profile={profile} rank={rank} crossTotal={crossTotal} rooms={rooms} scores={prog.scores} onLogout={logout} />
+            <Profile profile={profile} rank={rank} crossTotal={crossTotal} rooms={rooms} scores={prog.scores} streak={data.streak} currentRoomId={ROOM_ID} onLogout={logout} />
             <MyQuency value={data.quency || {}} onChange={(q) => updateData((d) => ({ ...d, quency: q }))} />
             <Toolkit value={data.techniques || []} onChange={(t) => updateData((d) => ({ ...d, techniques: t }))} />
           </div>
@@ -237,7 +262,11 @@ function App() {
       </main>
       </>)}
 
-      {showHub && <Hub onClose={() => setShowHub(false)} profile={profile} />}
+      {showHub && (
+        <Suspense fallback={<div className="flex items-center gap-2 text-zinc-400 text-sm py-16 justify-center"><Loader2 className="animate-spin" size={16} /> Opening the dojo…</div>}>
+          <Hub onClose={() => setShowHub(false)} profile={profile} />
+        </Suspense>
+      )}
 
       <DockedChat displayName={me.label} />
       <ArcadeOverlay
@@ -248,6 +277,7 @@ function App() {
         onResult={awardArcade}
       />
 
+      <BeltUp rankName={rank.name} accent={accent} />
       {!onboarded && <Onboarding name={me.label} onDone={() => updateData((d) => ({ ...d, onboarded: true }))} />}
       {pendingRecovery && <RecoveryModal username={pendingRecovery.username} code={pendingRecovery.code} onClose={clearRecovery} />}
     </div>

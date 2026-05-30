@@ -16,5 +16,11 @@ export function buildMemoryBlock({ displayName, quency = {}, techniques = [], ro
   if (facts.length) lines.push(`Things to remember about them:\n- ${facts.join('\n- ')}`);
   if (moves.length) lines.push(`Moves in their toolkit (reuse/reference these):\n- ${moves.map((m) => `${m.title}: ${String(m.body || '').slice(0, 120)}`).join('\n- ')}`);
   lines.push('Use this to tailor help and keep continuity across sessions, as if you remember them.');
-  return lines.join('\n').slice(0, 2200);
+  // Trim whole lines (never mid-fact) to stay within a sane budget.
+  let out = lines.join('\n');
+  while (out.length > 3200 && lines.length > 2) {
+    lines.splice(lines.length - 2, 1); // drop the second-to-last detail line
+    out = lines.join('\n');
+  }
+  return out;
 }

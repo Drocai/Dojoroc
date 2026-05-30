@@ -40,7 +40,9 @@ export default async function handler(req, res) {
   // back to a built-in room's mode. Always cap + add the safety suffix.
   let systemText;
   if (typeof clientSystem === 'string' && clientSystem.trim()) {
-    systemText = clientSystem.slice(0, 6000) + SAFETY_SUFFIX;
+    // Room persona (up to ~6k) + the learner's personal memory block — give it
+    // enough headroom that memory is never silently truncated.
+    systemText = clientSystem.slice(0, 12000) + SAFETY_SUFFIX;
   } else {
     const pack = getPack(packId);
     const modeConfig = pack.modes.find((m) => m.key === mode) || pack.modes[0];

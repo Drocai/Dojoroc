@@ -73,3 +73,17 @@ export const THEMES = {
 };
 
 export const themeFor = (color) => THEMES[color] || THEMES.emerald;
+
+// Raw hex/RGB per accent for the things Tailwind classes can't reach: the
+// <canvas> core, and the CSS ambience (driven by the --dojo-rgb variable). The
+// `rgb` triplet is space-separated for use in `rgb(var(--dojo-rgb) / alpha)`.
+export const ACCENT_HEX = {
+  emerald: { base: '#10b981', deep: '#059669', dark: '#052e16', rgb: '16 185 129' },
+  purple: { base: '#a855f7', deep: '#7c3aed', dark: '#2e1065', rgb: '168 85 247' },
+  blue: { base: '#3b82f6', deep: '#2563eb', dark: '#0c1f4d', rgb: '59 130 246' },
+  amber: { base: '#f59e0b', deep: '#d97706', dark: '#3a2406', rgb: '245 158 11' },
+  rose: { base: '#f43f5e', deep: '#e11d48', dark: '#4c0519', rgb: '244 63 94' },
+  cyan: { base: '#22d3ee', deep: '#0891b2', dark: '#053345', rgb: '34 211 238' },
+};
+
+export const hexFor = (color) => ACCENT_HEX[color] || ACCENT_HEX.emerald;

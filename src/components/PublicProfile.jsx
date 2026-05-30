@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Award, DoorOpen, Loader2, Swords, BookOpen } from 'lucide-react';
+import { Award, DoorOpen, Loader2, Swords, BookOpen, Share2, Check } from 'lucide-react';
 import { publicProfile } from '../lib/profile';
 import { rankFor } from '../lib/rank';
 import { themeFor } from '../lib/theme';
@@ -9,10 +9,18 @@ import { activePack } from '../../packs/index.js';
 // page showing their belt, total XP, and rooms trained. Reached via /?u=<name>.
 const PublicProfile = ({ username }) => {
   const [p, setP] = useState(undefined);
+  const [shared, setShared] = useState(false);
 
   useEffect(() => {
     publicProfile(username).then(setP);
   }, [username]);
+
+  const share = () => {
+    navigator.clipboard?.writeText(window.location.href).then(() => {
+      setShared(true);
+      setTimeout(() => setShared(false), 1800);
+    });
+  };
 
   const accent = themeFor(activePack.brand.accent);
 
@@ -69,9 +77,18 @@ const PublicProfile = ({ username }) => {
 
         {since && <div className="text-[11px] text-zinc-600 text-center mt-4">Training in the dojo since {since}</div>}
 
-        <a href="/" className={`w-full mt-6 px-4 py-3 rounded-2xl ${accent.btn} text-white text-sm font-semibold flex items-center justify-center gap-2`}>
-          <DoorOpen size={16} /> Enter the Dojo
-        </a>
+        <div className="flex gap-2 mt-6">
+          <a href="/" className={`flex-1 px-4 py-3 rounded-2xl ${accent.btn} text-white text-sm font-semibold flex items-center justify-center gap-2`}>
+            <DoorOpen size={16} /> Enter the Dojo
+          </a>
+          <button
+            onClick={share}
+            aria-label="Copy link"
+            className="px-4 py-3 rounded-2xl bg-zinc-800 border border-zinc-700 hover:border-zinc-500 text-zinc-200 flex items-center justify-center"
+          >
+            {shared ? <Check size={16} className={theme.text} /> : <Share2 size={16} />}
+          </button>
+        </div>
       </div>
     </div>
   );

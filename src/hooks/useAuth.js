@@ -9,7 +9,9 @@ export function useAuth() {
   const [profile, setProfile] = useState(null);
   const [ready, setReady] = useState(false);
   const [pendingRecovery, setPendingRecovery] = useState(null);
+  const [saving, setSaving] = useState(false);
   const saveTimer = useRef(null);
+  const pendingRef = useRef(null);
 
   useEffect(() => {
     (async () => {
@@ -19,10 +21,32 @@ export function useAuth() {
         if (r && !r.error) {
           setProfile(r);
           P.saveSession({ username: r.username, token: r.token, displayName: r.display_name });
+        } else {
+          P.clearSession(); // stale/invalid token — don't keep retrying it
         }
       }
       setReady(true);
     })();
+  }, []);
+
+  // If the tab is backgrounded or closed with a debounced save still pending,
+  // flush it immediately so progress is never lost.
+  useEffect(() => {
+    const flush = () => {
+      if (!pendingRef.current) return;
+      clearTimeout(saveTimer.current);
+      const { username, token, data } = pendingRef.current;
+      pendingRef.current = null;
+      P.saveData(username, token, data);
+      setSaving(false);
+    };
+    const onVisibility = () => document.visibilityState === 'hidden' && flush();
+    document.addEventListener('visibilitychange', onVisibility);
+    window.addEventListener('pagehide', flush);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibility);
+      window.removeEventListener('pagehide', flush);
+    };
   }, []);
 
   const adopt = (r) => {
@@ -53,19 +77,25 @@ export function useAuth() {
     setProfile(null);
   };
 
-  // Update profile.data (function or object) and persist, debounced.
+  // Update profile.data (function or object) and persist, debounced. Skips the
+  // write entirely when the updater returns the same data (a no-op).
   const updateData = useCallback((updater) => {
     setProfile((prev) => {
       if (!prev) return prev;
       const data = typeof updater === 'function' ? updater(prev.data || {}) : updater;
+      if (data === prev.data) return prev; // no change — don't save
       const next = { ...prev, data };
+      pendingRef.current = { username: next.username, token: next.token, data };
       clearTimeout(saveTimer.current);
-      saveTimer.current = setTimeout(() => {
-        P.saveData(next.username, next.token, next.data);
+      setSaving(true);
+      saveTimer.current = setTimeout(async () => {
+        await P.saveData(next.username, next.token, data);
+        pendingRef.current = null;
+        setSaving(false);
       }, 600);
       return next;
     });
   }, []);
 
-  return { profile, ready, signUp, login, reset, logout, updateData, pendingRecovery, clearRecovery: () => setPendingRecovery(null) };
+  return { profile, ready, saving, signUp, login, reset, logout, updateData, pendingRecovery, clearRecovery: () => setPendingRecovery(null) };
 }

@@ -9,6 +9,11 @@ body,
   background: #0a0a0f;
 }
 
+/* Accent that the whole dojo ambience follows; App sets it per active room. */
+:root {
+  --dojo-rgb: 16 185 129;
+}
+
 /* --- Cyberpunk theme layer ------------------------------------------------ */
 
 /* Display font for brand + headers (loaded in index.html). */
@@ -25,8 +30,8 @@ body,
   pointer-events: none;
   z-index: 0;
   background-image:
-    repeating-linear-gradient(0deg, rgba(16, 185, 129, 0.035) 0 1px, transparent 1px 3px),
-    radial-gradient(circle at 50% -10%, rgba(16, 185, 129, 0.07), transparent 55%),
+    repeating-linear-gradient(0deg, rgb(var(--dojo-rgb) / 0.035) 0 1px, transparent 1px 3px),
+    radial-gradient(circle at 50% -10%, rgb(var(--dojo-rgb) / 0.07), transparent 55%),
     linear-gradient(rgba(255, 255, 255, 0.014) 1px, transparent 1px),
     linear-gradient(90deg, rgba(255, 255, 255, 0.014) 1px, transparent 1px);
   background-size: 100% 3px, 100% 100%, 44px 44px, 44px 44px;
@@ -34,7 +39,7 @@ body,
 
 /* Neon text glow + a subtle, infrequent flicker for the brand. */
 .dojo-glow {
-  text-shadow: 0 0 8px rgba(16, 185, 129, 0.55), 0 0 22px rgba(16, 185, 129, 0.22);
+  text-shadow: 0 0 8px rgb(var(--dojo-rgb) / 0.55), 0 0 22px rgb(var(--dojo-rgb) / 0.22);
   animation: dojoFlicker 7s infinite steps(1);
 }
 
@@ -53,7 +58,7 @@ body,
   width: 14px;
   height: 14px;
   pointer-events: none;
-  border-color: rgba(16, 185, 129, 0.45);
+  border-color: rgb(var(--dojo-rgb) / 0.45);
   border-style: solid;
 }
 .hud::before {
@@ -69,6 +74,31 @@ body,
   border-bottom-right-radius: 4px;
 }
 
+/* Belt-promotion toast: a quick drop-in with a pulsing badge. */
+.belt-up {
+  animation: beltDrop 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+@keyframes beltDrop {
+  from { opacity: 0; transform: translate(-50%, -18px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
+.belt-up-badge {
+  animation: beltPulse 1.5s ease-in-out infinite;
+}
+@keyframes beltPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.45); }
+  50% { box-shadow: 0 0 0 9px rgba(255, 255, 255, 0); }
+}
+
+/* Visible focus ring for keyboard users only (not on mouse clicks). */
+:focus-visible {
+  outline: 2px solid rgb(var(--dojo-rgb) / 0.85);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .dojo-glow { animation: none; }
+  .dojo-glow,
+  .belt-up,
+  .belt-up-badge { animation: none; }
 }

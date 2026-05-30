@@ -17,7 +17,14 @@ const AuthScreen = ({ onSignUp, onLogin, onReset }) => {
 
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
 
+  const canSubmit =
+    form.username.trim() &&
+    form.password &&
+    (mode !== 'signup' || form.display.trim()) &&
+    (mode !== 'reset' || form.code.trim());
+
   const submit = async () => {
+    if (!canSubmit) return;
     setError('');
     setBusy(true);
     const r =
@@ -76,6 +83,7 @@ const AuthScreen = ({ onSignUp, onLogin, onReset }) => {
               <input
                 value={form.display}
                 onChange={(e) => set('display', e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && submit()}
                 placeholder="Graysen"
                 className="w-full mt-1 bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2.5 text-sm outline-none"
               />
@@ -86,7 +94,9 @@ const AuthScreen = ({ onSignUp, onLogin, onReset }) => {
             <input
               value={form.username}
               onChange={(e) => set('username', e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && submit()}
               autoCapitalize="none"
+              autoComplete="username"
               placeholder="letters & numbers"
               className="w-full mt-1 bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2.5 text-sm outline-none"
             />
@@ -97,6 +107,7 @@ const AuthScreen = ({ onSignUp, onLogin, onReset }) => {
               <input
                 value={form.code}
                 onChange={(e) => set('code', e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && submit()}
                 placeholder="the code you saved at signup"
                 className="w-full mt-1 bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2.5 text-sm outline-none font-mono"
               />
@@ -109,6 +120,7 @@ const AuthScreen = ({ onSignUp, onLogin, onReset }) => {
               value={form.password}
               onChange={(e) => set('password', e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && submit()}
+              autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
               placeholder="4+ characters"
               className="w-full mt-1 bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2.5 text-sm outline-none"
             />
@@ -136,8 +148,8 @@ const AuthScreen = ({ onSignUp, onLogin, onReset }) => {
 
         <button
           onClick={submit}
-          disabled={busy}
-          className={`w-full mt-5 px-4 py-3 rounded-2xl ${accent.btn} text-white text-sm font-semibold flex items-center justify-center gap-2 disabled:opacity-50`}
+          disabled={busy || !canSubmit}
+          className={`w-full mt-5 px-4 py-3 rounded-2xl ${accent.btn} text-white text-sm font-semibold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed`}
         >
           {busy ? <Loader2 className="animate-spin" size={16} /> : mode === 'signup' ? <UserPlus size={16} /> : mode === 'reset' ? <KeyRound size={16} /> : <LogIn size={16} />}
           {mode === 'signup' ? 'Create my profile' : mode === 'reset' ? 'Reset password' : 'Log in'}

@@ -40,7 +40,7 @@ const Leaderboard = ({ meUsername, onPick }) => {
                 mine ? 'bg-white/10 border border-white/15' : 'hover:bg-white/5'
               }`}
             >
-              <span className="w-6 text-center font-mono text-xs text-zinc-500">{i + 1}</span>
+              <span className="w-6 text-center text-xs text-zinc-500">{['🥇', '🥈', '🥉'][i] || <span className="font-mono">{i + 1}</span>}</span>
               <span className={`w-7 h-7 rounded-xl ${theme.solid} flex items-center justify-center text-white text-xs font-black flex-shrink-0`}>
                 {(r.display_name || r.username).slice(0, 1).toUpperCase()}
               </span>

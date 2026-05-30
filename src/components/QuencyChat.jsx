@@ -7,13 +7,25 @@ import { themeFor } from '../lib/theme';
 const { sensei, modes, modelOptions } = activePack;
 const accent = themeFor(activePack.brand.accent);
 
+// One-tap conversation starters, drawn from the active room's missions/subject.
+const STARTERS = [
+  ...(activePack.missions || []).slice(0, 2).map((m) => `Help me start: ${m.title}`),
+  `Quiz me on ${activePack.subject || 'this room'}`,
+].filter(Boolean).slice(0, 3);
+
 const QuencyChat = ({ memory = '', displayName, onRemember }) => {
   const greeting = displayName ? `Welcome back, ${displayName}. ${sensei.greeting}` : sensei.greeting;
   const [messages, setMessages] = useState([{ role: 'quency', text: greeting }]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
-  const [model, setModel] = useState(modelOptions[0].key);
-  const [mode, setMode] = useState(modes[0].key);
+  const [model, setModel] = useState(() => {
+    const saved = typeof localStorage !== 'undefined' && localStorage.getItem('dojo.model');
+    return modelOptions.some((m) => m.key === saved) ? saved : modelOptions[0].key;
+  });
+  const [mode, setMode] = useState(() => {
+    const saved = typeof localStorage !== 'undefined' && localStorage.getItem(`dojo.mode.${activePack.id}`);
+    return modes.some((m) => m.key === saved) ? saved : modes[0].key;
+  });
   const [remembered, setRemembered] = useState({});
   const [distilling, setDistilling] = useState(false);
   const chatContainerRef = useRef(null);
@@ -48,8 +60,17 @@ const QuencyChat = ({ memory = '', displayName, onRemember }) => {
       let txt = String(data.reply || '').trim().replace(/^```(json)?/i, '').replace(/```$/, '');
       txt = txt.slice(txt.indexOf('['), txt.lastIndexOf(']') + 1);
       const facts = JSON.parse(txt);
-      if (Array.isArray(facts)) facts.slice(0, 3).forEach((f) => typeof f === 'string' && onRemember(f.slice(0, 200)));
-      setMessages((prev) => [...prev, { role: 'system', text: `Saved ${Math.min(3, facts.length)} thing(s) to your ${sensei.name}'s memory.` }]);
+      const kept = Array.isArray(facts) ? facts.filter((f) => typeof f === 'string' && f.trim()).slice(0, 3) : [];
+      kept.forEach((f) => onRemember(f.slice(0, 200)));
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: 'system',
+          text: kept.length
+            ? `Saved ${kept.length} thing${kept.length > 1 ? 's' : ''} to your ${sensei.name}'s memory: ${kept.join('; ')}`
+            : `Nothing new to remember from this chat yet — keep going!`,
+        },
+      ]);
     } catch {
       setMessages((prev) => [...prev, { role: 'system', text: "Couldn't distill that chat — try again." }]);
     } finally {
@@ -65,8 +86,8 @@ const QuencyChat = ({ memory = '', displayName, onRemember }) => {
 
   useEffect(() => { scrollToBottom(); }, [messages, isTyping]);
 
-  const sendMessage = async () => {
-    const trimmed = input.trim();
+  const sendMessage = async (override) => {
+    const trimmed = (typeof override === 'string' ? override : input).trim();
     if (!trimmed || isTyping) return;
 
     // Build API history from prior turns (before adding the new one).
@@ -129,7 +150,8 @@ const QuencyChat = ({ memory = '', displayName, onRemember }) => {
       <div className="px-4 py-3 border-b border-zinc-800 flex flex-wrap gap-2 bg-zinc-950/30">
         <select
           value={model}
-          onChange={(e) => setModel(e.target.value)}
+          onChange={(e) => { setModel(e.target.value); try { localStorage.setItem('dojo.model', e.target.value); } catch { /* ignore */ } }}
+          aria-label="Model"
           className="bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-1.5 text-xs outline-none text-zinc-200"
         >
           {MODEL_OPTIONS.map((m) => (
@@ -138,7 +160,8 @@ const QuencyChat = ({ memory = '', displayName, onRemember }) => {
         </select>
         <select
           value={mode}
-          onChange={(e) => setMode(e.target.value)}
+          onChange={(e) => { setMode(e.target.value); try { localStorage.setItem(`dojo.mode.${activePack.id}`, e.target.value); } catch { /* ignore */ } }}
+          aria-label="Teaching mode"
           className="bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-1.5 text-xs outline-none text-zinc-200"
         >
           {MODE_OPTIONS.map((m) => (
@@ -147,7 +170,7 @@ const QuencyChat = ({ memory = '', displayName, onRemember }) => {
         </select>
       </div>
 
-      <div ref={chatContainerRef} className="flex-1 p-5 overflow-y-auto space-y-4 bg-zinc-950/30">
+      <div ref={chatContainerRef} aria-live="polite" className="flex-1 p-5 overflow-y-auto space-y-4 bg-zinc-950/30">
         {messages.map((msg, i) => (
           <div key={i} className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
             <div
@@ -176,22 +199,44 @@ const QuencyChat = ({ memory = '', displayName, onRemember }) => {
       </div>
 
       <div className="p-4 border-t border-zinc-800">
-        <div className="flex gap-2">
-          <input
+        {messages.length <= 1 && !isTyping && (
+          <div className="flex flex-wrap gap-1.5 mb-2.5">
+            {STARTERS.map((s) => (
+              <button
+                key={s}
+                onClick={() => sendMessage(s)}
+                className="text-[11px] px-2.5 py-1.5 rounded-full bg-white/5 hover:bg-white/10 border border-zinc-700 text-zinc-300 transition-colors"
+              >
+                {s}
+              </button>
+            ))}
+          </div>
+        )}
+        <div className="flex gap-2 items-end">
+          <textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+              }
+            }}
+            rows={1}
             placeholder={sensei.placeholder}
-            className="flex-1 bg-zinc-950 border border-zinc-700 rounded-2xl px-4 py-3 text-sm outline-none"
+            aria-label={`Message ${sensei.name}`}
+            className="flex-1 bg-zinc-950 border border-zinc-700 rounded-2xl px-4 py-3 text-sm outline-none resize-none max-h-32 leading-relaxed"
           />
           <button
-            onClick={sendMessage}
+            onClick={() => sendMessage()}
             disabled={isTyping}
-            className={`px-5 rounded-2xl ${accent.btn} disabled:opacity-50 flex items-center justify-center`}
+            aria-label="Send message"
+            className={`px-5 py-3 rounded-2xl ${accent.btn} disabled:opacity-50 flex items-center justify-center`}
           >
             <Send size={18} />
           </button>
         </div>
+        <div className="text-[10px] text-zinc-600 mt-1.5 hidden sm:block">Enter to send · Shift+Enter for a new line</div>
       </div>
     </div>
   );

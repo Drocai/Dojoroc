@@ -10,7 +10,7 @@ const TOUR = [
   { icon: Trophy, title: 'Missions', body: 'Clear real tasks to earn XP, level up your belt, and power your Dojo Core.' },
   { icon: MessageSquare, title: `${sensei.name} AI`, body: 'Your AI sensei. Switch models + teaching modes and ask anything — anytime, on your own.' },
   { icon: LayoutGrid, title: 'Rooms', body: `Each room is a teacher. Enter one, or have ${sensei.name} build a brand-new one for anything you want to learn.` },
-  { icon: Gamepad2, title: 'Arcade', body: 'Waiting on something? Pop a learn-while-you-play game over your screen.' },
+  { icon: Gamepad2, title: 'Arcade & Chat', body: 'Two floating buttons live in the bottom corners: the controller (left) for learn-while-you-wait games, and chat (right) to talk to whoever shares your room code.' },
 ];
 
 // One-time post-signup tour. The name now comes from the profile.

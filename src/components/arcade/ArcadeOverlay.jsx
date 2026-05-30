@@ -1,11 +1,14 @@
-import React, { useState } from 'react';
-import { Gamepad2, X, Target } from 'lucide-react';
+import React, { useState, lazy, Suspense } from 'react';
+import { Gamepad2, X, Target, Loader2 } from 'lucide-react';
 import { activePack } from '../../../packs/index.js';
 import { themeFor } from '../../lib/theme';
 import { GAMES, poolFor } from '../../lib/arcade';
-import ClickerGame from './ClickerGame';
-import ShooterGame from './ShooterGame';
-import TetrisGame from './TetrisGame';
+
+// Games are code-split: their logic only loads when the arcade is opened, so
+// the launcher button stays instant and the initial bundle stays lean.
+const ClickerGame = lazy(() => import('./ClickerGame'));
+const ShooterGame = lazy(() => import('./ShooterGame'));
+const TetrisGame = lazy(() => import('./TetrisGame'));
 
 const accent = themeFor(activePack.brand.accent);
 
@@ -17,7 +20,14 @@ const GAME_COMPONENTS = { clicker: ClickerGame, shooter: ShooterGame, tetris: Te
 // teaches from the active room, feeds dojo XP, and keeps a shared high score.
 const ArcadeOverlay = ({ currentUser, players = activePack.players, scores = {}, focusMission, onResult }) => {
   const [open, setOpen] = useState(false);
-  const [game, setGame] = useState('clicker');
+  const [game, setGame] = useState(() => {
+    const saved = typeof localStorage !== 'undefined' && localStorage.getItem('dojo.arcade.game');
+    return GAME_COMPONENTS[saved] ? saved : 'clicker';
+  });
+  const pickGame = (key) => {
+    setGame(key);
+    try { localStorage.setItem('dojo.arcade.game', key); } catch { /* ignore */ }
+  };
   const Game = GAME_COMPONENTS[game];
   const pool = poolFor(focusMission?.id);
 
@@ -61,7 +71,7 @@ const ArcadeOverlay = ({ currentUser, players = activePack.players, scores = {},
           {GAMES.map((g) => (
             <button
               key={g.key}
-              onClick={() => setGame(g.key)}
+              onClick={() => pickGame(g.key)}
               className={`flex-1 px-2 py-1.5 rounded-xl text-xs font-medium transition-colors ${
                 game === g.key ? `${accent.solid} text-white` : 'bg-white/5 text-zinc-300 hover:bg-white/10'
               }`}
@@ -73,7 +83,9 @@ const ArcadeOverlay = ({ currentUser, players = activePack.players, scores = {},
         </div>
 
         <div className="flex-1 overflow-y-auto p-4">
-          <Game accent={accent} tips={pool.tips} quiz={pool.quiz} onResult={(score) => onResult?.(game, score)} />
+          <Suspense fallback={<div className="flex justify-center py-10 text-zinc-400"><Loader2 className="animate-spin" size={20} /></div>}>
+            <Game accent={accent} tips={pool.tips} quiz={pool.quiz} onResult={(score) => onResult?.(game, score)} />
+          </Suspense>
         </div>
 
         <div className="px-4 py-2 border-t border-white/10 flex items-center justify-between gap-2 text-[11px]">

@@ -1,14 +1,24 @@
 import React, { useState } from 'react';
-import { Award, Flame, LogOut, DoorClosed, Share2, Check } from 'lucide-react';
+import { Award, Flame, LogOut, DoorClosed, Share2, Check, MapPin } from 'lucide-react';
 import { themeFor } from '../lib/theme';
 import { GAMES } from '../lib/arcade';
 
+// Turn a room id into a readable name when we don't have a stored one (legacy
+// rooms): drop the random id suffix and title-case the slug.
+const prettyRoom = (id) =>
+  String(id)
+    .replace(/-[a-z0-9]{5}$/, '')
+    .split('-')
+    .map((w) => (w ? w[0].toUpperCase() + w.slice(1) : w))
+    .join(' ');
+
 // The portfolio card: who you are, your belt rank, total XP across every room
 // you've trained in, and your game bests. This is what carries with the user.
-const Profile = ({ profile, rank, crossTotal, rooms, scores, onLogout }) => {
+const Profile = ({ profile, rank, crossTotal, rooms, scores, streak, currentRoomId, onLogout }) => {
   const theme = themeFor(profile.color);
-  const roomEntries = Object.entries(rooms || {});
+  const roomEntries = Object.entries(rooms || {}).sort((a, b) => (b[1].xp || 0) + (b[1].bonusXp || 0) - (a[1].xp || 0) - (a[1].bonusXp || 0));
   const [shared, setShared] = useState(false);
+  const days = streak?.count || 0;
 
   const share = () => {
     const url = `${window.location.origin}/?u=${encodeURIComponent(profile.username)}`;
@@ -28,8 +38,15 @@ const Profile = ({ profile, rank, crossTotal, rooms, scores, onLogout }) => {
           <div className="min-w-0">
             <div className="font-display text-xl tracking-wide truncate">{profile.display_name}</div>
             <div className="text-xs text-zinc-500 font-mono">@{profile.username}</div>
-            <div className={`text-sm font-semibold mt-1 flex items-center gap-1.5 ${theme.text}`}>
-              <Award size={15} /> {rank.name}
+            <div className="flex items-center gap-3 mt-1 flex-wrap">
+              <span className={`text-sm font-semibold flex items-center gap-1.5 ${theme.text}`}>
+                <Award size={15} /> {rank.name}
+              </span>
+              {days > 0 && (
+                <span className="text-xs font-semibold flex items-center gap-1 text-amber-400" title={`Best streak: ${streak?.best || days} days`}>
+                  <Flame size={13} /> {days}-day streak
+                </span>
+              )}
             </div>
           </div>
         </div>
@@ -67,8 +84,11 @@ const Profile = ({ profile, rank, crossTotal, rooms, scores, onLogout }) => {
         ) : (
           <div className="space-y-2">
             {roomEntries.map(([id, r]) => (
-              <div key={id} className="flex items-center justify-between text-sm">
-                <span className="text-zinc-300 truncate">{id}</span>
+              <div key={id} className="flex items-center justify-between text-sm gap-2">
+                <span className="text-zinc-300 truncate flex items-center gap-1.5">
+                  {r.name || prettyRoom(id)}
+                  {id === currentRoomId && <MapPin size={11} className={theme.text} title="You're here now" />}
+                </span>
                 <span className={`font-mono ${theme.text}`}>{(r.xp || 0) + (r.bonusXp || 0)} XP</span>
               </div>
             ))}
