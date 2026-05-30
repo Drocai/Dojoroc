@@ -43,3 +43,17 @@ export const deletePack = (id, username, token) =>
   rpc('dojo_delete_pack', { p_id: id, p_username: username, p_token: token });
 export const leaderboard = () => rpc('dojo_leaderboard', {});
 export const publicProfile = (username) => rpc('dojo_public_profile', { p_username: username });
+
+// Kick off Stripe checkout for Pro; returns { url } to redirect to (or {error}).
+export async function startProCheckout(username) {
+  try {
+    const res = await fetch('/api/checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username }),
+    });
+    return await res.json();
+  } catch {
+    return { error: 'Could not reach checkout.' };
+  }
+}

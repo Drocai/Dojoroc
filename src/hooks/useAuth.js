@@ -77,6 +77,14 @@ export function useAuth() {
     setProfile(null);
   };
 
+  // Re-pull the profile from the server (e.g. after a Pro purchase grants it).
+  const refresh = useCallback(async () => {
+    const s = P.loadSession();
+    if (!s?.username || !s?.token) return;
+    const r = await P.resume(s.username, s.token);
+    if (r && !r.error) setProfile(r);
+  }, []);
+
   // Update profile.data (function or object) and persist, debounced. Skips the
   // write entirely when the updater returns the same data (a no-op).
   const updateData = useCallback((updater) => {
@@ -97,5 +105,5 @@ export function useAuth() {
     });
   }, []);
 
-  return { profile, ready, saving, signUp, login, reset, logout, updateData, pendingRecovery, clearRecovery: () => setPendingRecovery(null) };
+  return { profile, ready, saving, signUp, login, reset, logout, refresh, updateData, pendingRecovery, clearRecovery: () => setPendingRecovery(null) };
 }

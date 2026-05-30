@@ -18,6 +18,7 @@ import Companions from './components/Companions';
 import RocAvatar from './components/RocAvatar';
 import RocReaction from './components/RocReaction';
 import { ensureRocs, buildRocPrompt, unlockedAbilities } from './lib/rocs';
+import { startProCheckout } from './lib/profile';
 // Hub (rooms grid + builder + leaderboard) is code-split — only loads on demand.
 const Hub = lazy(() => import('./components/hub/Hub'));
 import { activePack } from '../packs/index.js';
@@ -54,7 +55,7 @@ const pushLog = (logs, entry) => [entry, ...(logs || [])].slice(0, 12);
 const seedRoom = { tasks: [], xp: 0, bonusXp: 0, scores: {}, logs: [lore.boot] };
 
 function App() {
-  const { profile, ready, saving, signUp, login, reset, logout, updateData, pendingRecovery, clearRecovery } = useAuth();
+  const { profile, ready, saving, signUp, login, reset, logout, refresh, updateData, pendingRecovery, clearRecovery } = useAuth();
   const [view, setView] = useState('missions');
   const [showHub, setShowHub] = useState(false);
   const [publicUser] = useState(() =>
@@ -68,6 +69,22 @@ function App() {
   useEffect(() => {
     document.documentElement.style.setProperty('--dojo-rgb', hexFor(brand.accent).rgb);
   }, []);
+
+  // Returning from Stripe checkout: the webhook grants Pro asynchronously, so
+  // poll a few times for the flag to land, then clean the URL.
+  useEffect(() => {
+    if (!profile) return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('pro') !== 'success') return;
+    let tries = 0;
+    const iv = setInterval(async () => {
+      tries += 1;
+      await refresh();
+      if (tries >= 6) clearInterval(iv);
+    }, 2000);
+    window.history.replaceState({}, '', window.location.pathname);
+    return () => clearInterval(iv);
+  }, [profile?.username, refresh]);
 
   // Count today's visit toward the streak + ensure a Roc roster exists (once).
   useEffect(() => {
@@ -297,7 +314,11 @@ function App() {
               accountXp={crossTotal}
               currentGym={{ id: ROOM_ID, name: brand.title }}
               pro={data.pro === true}
-              onGoPro={() => alert('Pro tier is coming soon — legendary Rocs and exclusive wardrobe. Stay tuned!')}
+              onGoPro={async () => {
+                const r = await startProCheckout(profile.username);
+                if (r?.url) window.location.href = r.url;
+                else alert(r?.error || 'Checkout is not available yet — Stripe keys may not be configured.');
+              }}
               activeRocId={data.activeRocId}
               onSetActive={(id) => updateData((d) => ({ ...d, activeRocId: id }))}
               onRename={(id, name) => updateRoc(id, { name })}
