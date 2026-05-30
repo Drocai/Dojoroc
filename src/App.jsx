@@ -21,6 +21,7 @@ import RocReaction from './components/RocReaction';
 import { ensureRocs, buildRocPrompt, unlockedAbilities } from './lib/rocs';
 import { startProCheckout } from './lib/profile';
 import DailyQuests from './components/DailyQuests';
+import BeatLab from './components/BeatLab';
 import { recordQuest, freshQuests, claimQuest, todaysQuests } from './lib/quests';
 import { streakMultiplier } from './lib/streak';
 // Hub (rooms grid + builder + leaderboard) is code-split — only loads on demand.
@@ -277,6 +278,7 @@ function App() {
                   return next;
                 })}
               />
+              {ROOM_ID === 'sound-dojo' && <BeatLab accent={brand.accent} onPlay={() => trackQuest('arcade')} />}
               <TrackLane title={`${me.label}'s Mission`} tasks={missions} completed={prog.tasks || []} onToggle={toggleTask} />
 
               <div className="hud bg-zinc-900 border border-zinc-800 rounded-3xl p-6">
