@@ -355,7 +355,7 @@ function App() {
 
       {showHub && (
         <Suspense fallback={<div className="flex items-center gap-2 text-zinc-400 text-sm py-16 justify-center"><Loader2 className="animate-spin" size={16} /> Opening the dojo…</div>}>
-          <Hub onClose={() => setShowHub(false)} profile={profile} />
+          <Hub onClose={() => setShowHub(false)} profile={profile} activeRoc={activeRoc} />
         </Suspense>
       )}
 

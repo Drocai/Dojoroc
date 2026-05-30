@@ -6,13 +6,14 @@ import { deletePack } from '../../lib/profile';
 import { themeFor } from '../../lib/theme';
 import RoomBuilder from './RoomBuilder';
 import Leaderboard from './Leaderboard';
+import DojoMap from './DojoMap';
 
 const accent = themeFor(activePack.brand.accent);
 
 // The big dojo: every room (teacher) you can walk into. Built-in starter +
 // every room the community has forged (saved to Supabase). Enter one, build a
 // new one, or remove rooms you made.
-const Hub = ({ onClose, profile }) => {
+const Hub = ({ onClose, profile, activeRoc }) => {
   const [rooms, setRooms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [building, setBuilding] = useState(false);
@@ -72,6 +73,8 @@ const Hub = ({ onClose, profile }) => {
           <X size={18} />
         </button>
       </div>
+
+      {!loading && rooms.length > 0 && <DojoMap rooms={rooms} profile={profile} roc={activeRoc} />}
 
       <Leaderboard meUsername={profile?.username} onPick={(u) => { window.location.href = `/?u=${encodeURIComponent(u)}`; }} />
 
