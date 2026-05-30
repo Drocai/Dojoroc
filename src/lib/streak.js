@@ -16,3 +16,15 @@ export function bumpStreak(streak = {}) {
   const count = streak.last === yesterday ? (streak.count || 0) + 1 : 1;
   return { count, best: Math.max(streak.best || 0, count), last: today };
 }
+
+// Quest-reward multiplier from the current streak: +10% per day, capped at 2x.
+// (1 day → 1.0x, 2 → 1.1x, … 11+ → 2.0x.) Keeps showing up paying off.
+export function streakMultiplier(streak = {}) {
+  return Math.min(2, 1 + Math.max(0, (streak.count || 0) - 1) * 0.1);
+}
+
+// Label for the bonus, e.g. "+30%" (empty on day 1 / no bonus).
+export function streakBonusLabel(streak = {}) {
+  const pct = Math.round((streakMultiplier(streak) - 1) * 100);
+  return pct > 0 ? `+${pct}%` : '';
+}

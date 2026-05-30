@@ -22,6 +22,7 @@ import { ensureRocs, buildRocPrompt, unlockedAbilities } from './lib/rocs';
 import { startProCheckout } from './lib/profile';
 import DailyQuests from './components/DailyQuests';
 import { recordQuest, freshQuests, claimQuest, todaysQuests } from './lib/quests';
+import { streakMultiplier } from './lib/streak';
 // Hub (rooms grid + builder + leaderboard) is code-split — only loads on demand.
 const Hub = lazy(() => import('./components/hub/Hub'));
 import { activePack } from '../packs/index.js';
@@ -258,17 +259,20 @@ function App() {
             <div className="lg:col-span-7 space-y-6">
               <DailyQuests
                 quests={data.quests}
+                streak={data.streak}
                 accent={brand.accent}
                 onClaim={(q) => updateData((d) => {
                   const quests = claimQuest(d.quests, q.id);
                   if (quests === d.quests) return d;
-                  // Award the quest XP as room bonus XP (also ranks the active Roc).
+                  // Quest XP scaled by the daily-streak multiplier; awarded as
+                  // room bonus XP (which also ranks the active Roc).
+                  const xp = Math.round(q.xp * streakMultiplier(d.streak));
                   const cur = { ...seedRoom, ...((d.rooms || {})[ROOM_ID] || {}) };
-                  const next = { ...d, quests, rooms: { ...(d.rooms || {}), [ROOM_ID]: { ...cur, bonusXp: (cur.bonusXp || 0) + q.xp, name: brand.title } } };
+                  const next = { ...d, quests, rooms: { ...(d.rooms || {}), [ROOM_ID]: { ...cur, bonusXp: (cur.bonusXp || 0) + xp, name: brand.title } } };
                   const aid = d.activeRocId;
                   if (aid && d.rocs?.[aid]) {
                     const r = d.rocs[aid];
-                    next.rocs = { ...d.rocs, [aid]: { ...r, xp: (r.xp || 0) + q.xp } };
+                    next.rocs = { ...d.rocs, [aid]: { ...r, xp: (r.xp || 0) + xp } };
                   }
                   return next;
                 })}
