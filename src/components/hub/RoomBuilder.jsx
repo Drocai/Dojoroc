@@ -23,8 +23,8 @@ Schema:
 "handoff":{"studentDefault":studentName,"aiPolishTemplate":"short instruction using {name}","questionGroups":[1 of {"title":str,"items":[[id,label,hint],[id,label,hint]]}],"blocks":[1 of {"key":slug,"title":str,"where":str,"bodyTemplate":"text using {name}"}]}}
 Age-appropriate, specifically about the requested subject. ONLY the JSON object.`;
 
-const RoomBuilder = ({ accent, onClose }) => {
-  const [form, setForm] = useState({ subject: '', student: '', mentor: 'Dad', level: '', firstWin: '', vibe: '' });
+const RoomBuilder = ({ accent, onClose, profile }) => {
+  const [form, setForm] = useState({ subject: '', student: profile?.display_name || '', mentor: 'Dad', level: '', firstWin: '', vibe: '' });
   const [status, setStatus] = useState('');
   const [busy, setBusy] = useState(false);
   const [draft, setDraft] = useState(null); // validated data pack
@@ -83,7 +83,7 @@ const RoomBuilder = ({ accent, onClose }) => {
     if (supabase) {
       const { error } = await supabase
         .from('dojo_packs')
-        .insert({ id: draft.id, name: draft.name, subject: draft.subject, data: draft, owner: form.mentor || null });
+        .insert({ id: draft.id, name: draft.name, subject: draft.subject, data: draft, owner: profile?.username || null });
       if (error) {
         setStatus(`Couldn't save: ${error.message}`);
         setBusy(false);

@@ -4,15 +4,17 @@
 // profile (profile.data.quency), which is the heart of "training your own
 // Quency that comes with you."
 
-export function buildMemoryBlock({ displayName, quency = {}, roomName, roomSubject } = {}) {
+export function buildMemoryBlock({ displayName, quency = {}, techniques = [], roomName, roomSubject } = {}) {
   const goals = (quency.goals || []).filter(Boolean);
   const facts = (quency.facts || []).filter(Boolean);
+  const moves = (techniques || []).filter((t) => t && t.title);
   const lines = ['\n\n[Who you are helping — your persistent memory of this student]'];
   if (displayName) lines.push(`Name: ${displayName}. Greet them by name and stay personal.`);
   if (roomName || roomSubject) lines.push(`Current room: ${roomName || ''}${roomSubject ? ` — ${roomSubject}` : ''}.`);
   if (quency.about) lines.push(`About them: ${quency.about}`);
   if (goals.length) lines.push(`Their learning goals:\n- ${goals.join('\n- ')}`);
   if (facts.length) lines.push(`Things to remember about them:\n- ${facts.join('\n- ')}`);
+  if (moves.length) lines.push(`Moves in their toolkit (reuse/reference these):\n- ${moves.map((m) => `${m.title}: ${String(m.body || '').slice(0, 120)}`).join('\n- ')}`);
   lines.push('Use this to tailor help and keep continuity across sessions, as if you remember them.');
-  return lines.join('\n').slice(0, 1600);
+  return lines.join('\n').slice(0, 2200);
 }

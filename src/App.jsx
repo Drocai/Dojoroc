@@ -12,6 +12,8 @@ import Onboarding from './components/Onboarding';
 import AuthScreen from './components/AuthScreen';
 import Profile from './components/Profile';
 import MyQuency from './components/MyQuency';
+import Toolkit from './components/Toolkit';
+import RecoveryModal from './components/RecoveryModal';
 import { activePack } from '../packs/index.js';
 import { themeFor } from './lib/theme';
 import { rankFor } from './lib/rank';
@@ -45,7 +47,7 @@ const pushLog = (logs, entry) => [entry, ...(logs || [])].slice(0, 12);
 const seedRoom = { tasks: [], xp: 0, bonusXp: 0, scores: {}, logs: [lore.boot] };
 
 function App() {
-  const { profile, ready, signUp, login, logout, updateData } = useAuth();
+  const { profile, ready, signUp, login, reset, logout, updateData, pendingRecovery, clearRecovery } = useAuth();
   const [view, setView] = useState('missions');
   const [showHub, setShowHub] = useState(false);
 
@@ -58,7 +60,7 @@ function App() {
   }
 
   if (!profile) {
-    return <AuthScreen onSignUp={signUp} onLogin={login} />;
+    return <AuthScreen onSignUp={signUp} onLogin={login} onReset={reset} />;
   }
 
   const data = profile.data || {};
@@ -205,7 +207,7 @@ function App() {
           <div className="max-w-2xl mx-auto">
             <QuencyChat
               displayName={me.label}
-              memory={buildMemoryBlock({ displayName: me.label, quency: data.quency, roomName: brand.title, roomSubject: activePack.subject })}
+              memory={buildMemoryBlock({ displayName: me.label, quency: data.quency, techniques: data.techniques, roomName: brand.title, roomSubject: activePack.subject })}
             />
           </div>
         )}
@@ -215,12 +217,13 @@ function App() {
           <div className="max-w-2xl mx-auto space-y-5">
             <Profile profile={profile} rank={rank} crossTotal={crossTotal} rooms={rooms} scores={prog.scores} onLogout={logout} />
             <MyQuency value={data.quency || {}} onChange={(q) => updateData((d) => ({ ...d, quency: q }))} />
+            <Toolkit value={data.techniques || []} onChange={(t) => updateData((d) => ({ ...d, techniques: t }))} />
           </div>
         )}
       </main>
       </>)}
 
-      {showHub && <Hub onClose={() => setShowHub(false)} />}
+      {showHub && <Hub onClose={() => setShowHub(false)} profile={profile} />}
 
       <DockedChat displayName={me.label} />
       <ArcadeOverlay
@@ -232,6 +235,7 @@ function App() {
       />
 
       {!onboarded && <Onboarding name={me.label} onDone={() => updateData((d) => ({ ...d, onboarded: true }))} />}
+      {pendingRecovery && <RecoveryModal username={pendingRecovery.username} code={pendingRecovery.code} onClose={clearRecovery} />}
     </div>
   );
 }

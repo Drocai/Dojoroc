@@ -37,3 +37,7 @@ export const login = (username, password) => rpc('dojo_login', { p_username: use
 export const resume = (username, token) => rpc('dojo_resume', { p_username: username, p_token: token });
 export const saveData = (username, token, data) =>
   rpc('dojo_save', { p_username: username, p_token: token, p_data: data });
+export const reset = (username, code, newPassword) =>
+  rpc('dojo_reset', { p_username: username, p_code: code, p_new_password: newPassword });
+export const deletePack = (id, username, token) =>
+  rpc('dojo_delete_pack', { p_id: id, p_username: username, p_token: token });

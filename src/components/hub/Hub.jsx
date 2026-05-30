@@ -1,49 +1,51 @@
 import React, { useEffect, useState } from 'react';
-import { Plus, DoorOpen, X, Loader2, Check } from 'lucide-react';
+import { Plus, DoorOpen, X, Loader2, Check, Trash2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { BUILTIN_PACKS, activePack, enterPackData } from '../../../packs/index.js';
+import { deletePack } from '../../lib/profile';
 import { themeFor } from '../../lib/theme';
 import RoomBuilder from './RoomBuilder';
 
 const accent = themeFor(activePack.brand.accent);
 
 // The big dojo: every room (teacher) you can walk into. Built-in starter +
-// every room saved to Supabase. Pick one to enter it, or build a new one.
-const Hub = ({ onClose }) => {
+// every room the community has forged (saved to Supabase). Enter one, build a
+// new one, or remove rooms you made.
+const Hub = ({ onClose, profile }) => {
   const [rooms, setRooms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [building, setBuilding] = useState(false);
 
+  const load = async () => {
+    const builtins = BUILTIN_PACKS.map((d) => ({ id: d.id, name: d.name, subject: d.subject, data: d, builtin: true, owner: null }));
+    if (!supabase) {
+      setRooms(builtins);
+      setLoading(false);
+      return;
+    }
+    const { data } = await supabase
+      .from('dojo_packs')
+      .select('id,name,subject,data,owner,created_at')
+      .order('created_at', { ascending: false });
+    setRooms([...builtins, ...(data || []).map((r) => ({ ...r, builtin: false }))]);
+    setLoading(false);
+  };
+
   useEffect(() => {
-    let active = true;
-    const load = async () => {
-      const builtins = BUILTIN_PACKS.map((d) => ({ id: d.id, name: d.name, subject: d.subject, data: d, builtin: true }));
-      if (!supabase) {
-        if (active) {
-          setRooms(builtins);
-          setLoading(false);
-        }
-        return;
-      }
-      const { data } = await supabase
-        .from('dojo_packs')
-        .select('id,name,subject,data,created_at')
-        .order('created_at', { ascending: false });
-      if (active) {
-        setRooms([...builtins, ...(data || []).map((r) => ({ ...r, builtin: false }))]);
-        setLoading(false);
-      }
-    };
     load();
-    return () => {
-      active = false;
-    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const removeRoom = async (room) => {
+    if (!profile || room.owner !== profile.username) return;
+    const r = await deletePack(room.id, profile.username, profile.token);
+    if (r && !r.error) setRooms((prev) => prev.filter((x) => x.id !== room.id));
+  };
 
   if (building) {
     return (
       <main className="max-w-7xl mx-auto px-4 sm:px-8 py-8 relative">
-        <RoomBuilder accent={accent} onClose={() => setBuilding(false)} />
+        <RoomBuilder accent={accent} profile={profile} onClose={() => setBuilding(false)} />
       </main>
     );
   }
@@ -81,18 +83,21 @@ const Hub = ({ onClose }) => {
             const current = room.id === activePack.id;
             const missions = room.data?.missions?.length || 0;
             const sensei = room.data?.sensei?.name || 'Quency';
+            const mine = profile && room.owner === profile.username;
+            const by = room.builtin ? 'Starter room' : room.owner ? `forged by ${mine ? 'you' : room.owner}` : 'community room';
             return (
-              <div key={room.id} className="hud bg-zinc-900 border border-zinc-800 rounded-3xl p-6 min-h-[170px] flex flex-col">
+              <div key={room.id} className="hud bg-zinc-900 border border-zinc-800 rounded-3xl p-6 min-h-[180px] flex flex-col">
                 <div className="flex items-center justify-between gap-2">
                   <h3 className="font-display tracking-wide truncate">{room.data?.brand?.title || room.name}</h3>
-                  {room.builtin && <span className="text-[9px] uppercase tracking-wide text-zinc-500 border border-zinc-700 rounded px-1.5 py-0.5">Starter</span>}
+                  {mine && <span className={`text-[9px] uppercase tracking-wide ${accent.text} border border-current rounded px-1.5 py-0.5`}>Yours</span>}
                 </div>
                 <p className="text-xs text-zinc-400 mt-1 line-clamp-2">{room.subject}</p>
-                <div className="text-[11px] text-zinc-500 font-mono mt-3 flex gap-3">
+                <div className="text-[11px] text-zinc-500 font-mono mt-3 flex gap-3 flex-wrap">
                   <span>{missions} missions</span>
                   <span>sensei: {sensei}</span>
                 </div>
-                <div className="mt-auto pt-4">
+                <div className="text-[10px] text-zinc-600 mt-1">{by}</div>
+                <div className="mt-auto pt-4 flex items-center justify-between gap-2">
                   {current ? (
                     <div className={`text-sm flex items-center gap-1.5 ${accent.text}`}>
                       <Check size={15} /> You're in this room
@@ -103,6 +108,11 @@ const Hub = ({ onClose }) => {
                       className={`px-4 py-2 rounded-2xl ${accent.btn} text-white text-sm font-medium flex items-center gap-1.5`}
                     >
                       <DoorOpen size={15} /> Enter
+                    </button>
+                  )}
+                  {mine && (
+                    <button onClick={() => removeRoom(room)} className="text-zinc-500 hover:text-rose-400 p-2" aria-label="Delete room">
+                      <Trash2 size={15} />
                     </button>
                   )}
                 </div>

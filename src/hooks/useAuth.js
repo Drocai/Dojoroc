@@ -8,6 +8,7 @@ import * as P from '../lib/profile';
 export function useAuth() {
   const [profile, setProfile] = useState(null);
   const [ready, setReady] = useState(false);
+  const [pendingRecovery, setPendingRecovery] = useState(null);
   const saveTimer = useRef(null);
 
   useEffect(() => {
@@ -31,11 +32,19 @@ export function useAuth() {
 
   const signUp = async (u, p, d, c) => {
     const r = await P.signUp(u, p, d, c);
-    if (r && !r.error) adopt(r);
+    if (r && !r.error) {
+      if (r.recovery_code) setPendingRecovery({ username: r.username, code: r.recovery_code });
+      adopt(r);
+    }
     return r;
   };
   const login = async (u, p) => {
     const r = await P.login(u, p);
+    if (r && !r.error) adopt(r);
+    return r;
+  };
+  const reset = async (u, code, p) => {
+    const r = await P.reset(u, code, p);
     if (r && !r.error) adopt(r);
     return r;
   };
@@ -58,5 +67,5 @@ export function useAuth() {
     });
   }, []);
 
-  return { profile, ready, signUp, login, logout, updateData };
+  return { profile, ready, signUp, login, reset, logout, updateData, pendingRecovery, clearRecovery: () => setPendingRecovery(null) };
 }
