@@ -7,8 +7,9 @@ import { themeFor } from '../lib/theme';
 const { sensei, modes, modelOptions } = activePack;
 const accent = themeFor(activePack.brand.accent);
 
-const QuencyChat = () => {
-  const [messages, setMessages] = useState([{ role: 'quency', text: sensei.greeting }]);
+const QuencyChat = ({ memory = '', displayName }) => {
+  const greeting = displayName ? `Welcome back, ${displayName}. ${sensei.greeting}` : sensei.greeting;
+  const [messages, setMessages] = useState([{ role: 'quency', text: greeting }]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [model, setModel] = useState(modelOptions[0].key);
@@ -46,7 +47,7 @@ const QuencyChat = () => {
           model,
           mode,
           pack: activePack.id,
-          system: (modes.find((m) => m.key === mode) || modes[0]).system,
+          system: (modes.find((m) => m.key === mode) || modes[0]).system + memory,
         }),
       });
       const data = await res.json().catch(() => ({}));

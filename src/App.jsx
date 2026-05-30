@@ -11,9 +11,11 @@ import Hub from './components/hub/Hub';
 import Onboarding from './components/Onboarding';
 import AuthScreen from './components/AuthScreen';
 import Profile from './components/Profile';
+import MyQuency from './components/MyQuency';
 import { activePack } from '../packs/index.js';
 import { themeFor } from './lib/theme';
 import { rankFor } from './lib/rank';
+import { buildMemoryBlock } from './lib/quencyMemory';
 import { Zap, Trophy, Flame, Rocket, Gamepad2, Music, BookOpen, Brain, Sparkles, LayoutGrid, Award, Loader2 } from 'lucide-react';
 
 const BRAND_ICONS = { Zap, Flame, Rocket, Gamepad2, Music, BookOpen, Brain, Sparkles };
@@ -199,11 +201,21 @@ function App() {
           </div>
         )}
 
-        {view === 'quency' && <div className="max-w-2xl mx-auto"><QuencyChat /></div>}
+        {view === 'quency' && (
+          <div className="max-w-2xl mx-auto">
+            <QuencyChat
+              displayName={me.label}
+              memory={buildMemoryBlock({ displayName: me.label, quency: data.quency, roomName: brand.title, roomSubject: activePack.subject })}
+            />
+          </div>
+        )}
         {view === 'family' && <div className="max-w-2xl mx-auto"><FamilyChat displayName={me.label} /></div>}
         {view === 'handoff' && <HandoffKit />}
         {view === 'profile' && (
-          <Profile profile={profile} rank={rank} crossTotal={crossTotal} rooms={rooms} scores={prog.scores} onLogout={logout} />
+          <div className="max-w-2xl mx-auto space-y-5">
+            <Profile profile={profile} rank={rank} crossTotal={crossTotal} rooms={rooms} scores={prog.scores} onLogout={logout} />
+            <MyQuency value={data.quency || {}} onChange={(q) => updateData((d) => ({ ...d, quency: q }))} />
+          </div>
         )}
       </main>
       </>)}
