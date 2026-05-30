@@ -16,6 +16,7 @@ import PublicProfile from './components/PublicProfile';
 import BeltUp from './components/BeltUp';
 import Companions from './components/Companions';
 import RocAvatar from './components/RocAvatar';
+import RocReaction from './components/RocReaction';
 import { ensureRocs, buildRocPrompt, unlockedAbilities } from './lib/rocs';
 // Hub (rooms grid + builder + leaderboard) is code-split — only loads on demand.
 const Hub = lazy(() => import('./components/hub/Hub'));
@@ -60,6 +61,7 @@ function App() {
     typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('u') : null
   );
   const streakRan = useRef(false);
+  const [reaction, setReaction] = useState(null);
 
   // Tint the whole dojo ambience (scanlines, glow, HUD brackets) to the active
   // room's accent.
@@ -111,6 +113,9 @@ function App() {
   // Active Roc (the trainable companion that travels with you + powers chat).
   const rocs = data.rocs || {};
   const activeRoc = rocs[data.activeRocId] || Object.values(rocs)[0] || null;
+  // Roc reaction bus: bump {kind,n} to make the companion cheer.
+  const reactN = useRef(0);
+  const fireReaction = (kind) => setReaction({ kind, n: ++reactN.current });
   const updateRoc = (id, patch) =>
     updateData((d) => ({ ...d, rocs: { ...(d.rocs || {}), [id]: { ...(d.rocs || {})[id], ...patch } } }));
 
@@ -142,8 +147,10 @@ function App() {
     const oldTotal = roomTotal;
     const newTotal = xp + (prog.bonusXp || 0);
     let logs = pushLog(prog.logs, `${stamp()} · ${me.label} ${adding ? 'cleared' : 'reopened'} "${TASK_TITLE[taskId]}"`);
-    if (levelFor(newTotal) > levelFor(oldTotal)) logs = pushLog(logs, `${stamp()} · ${lore.levelUp(levelFor(newTotal), me.label)}`);
+    const leveled = levelFor(newTotal) > levelFor(oldTotal);
+    if (leveled) logs = pushLog(logs, `${stamp()} · ${lore.levelUp(levelFor(newTotal), me.label)}`);
     updateRoom({ tasks: newTasks, xp, logs });
+    if (adding) fireReaction(leveled ? 'levelup' : 'mission');
   };
 
   const awardArcade = (game, score) => {
@@ -154,8 +161,10 @@ function App() {
     const scores = { ...(prog.scores || {}), [game]: Math.max(prog.scores?.[game] || 0, Math.round(score)) };
     const newTotal = roomMissionXp + bonusXp;
     let logs = pushLog(prog.logs, `${stamp()} · ${lore.arcadeXp(gain, me.label)}`);
-    if (levelFor(newTotal) > levelFor(oldTotal)) logs = pushLog(logs, `${stamp()} · ${lore.levelUp(levelFor(newTotal), me.label)}`);
+    const leveled = levelFor(newTotal) > levelFor(oldTotal);
+    if (leveled) logs = pushLog(logs, `${stamp()} · ${lore.levelUp(levelFor(newTotal), me.label)}`);
     updateRoom({ bonusXp, scores, logs });
+    fireReaction(leveled ? 'levelup' : 'arcade');
   };
 
   return (
@@ -328,6 +337,7 @@ function App() {
       />
 
       <BeltUp rankName={rank.name} accent={accent} />
+      <RocReaction roc={activeRoc} event={reaction} />
       {!onboarded && <Onboarding name={me.label} onDone={() => updateData((d) => ({ ...d, onboarded: true }))} />}
       {pendingRecovery && <RecoveryModal username={pendingRecovery.username} code={pendingRecovery.code} onClose={clearRecovery} />}
     </div>
