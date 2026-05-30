@@ -7,9 +7,10 @@ import FamilyChat from './components/FamilyChat';
 import HandoffKit from './components/HandoffKit';
 import DockedChat from './components/DockedChat';
 import ArcadeOverlay from './components/arcade/ArcadeOverlay';
+import Hub from './components/hub/Hub';
 import { activePack } from '../packs/index.js';
 import { themeFor } from './lib/theme';
-import { Zap, Trophy, Flame, Rocket, Gamepad2, Music, BookOpen, Brain, Sparkles } from 'lucide-react';
+import { Zap, Trophy, Flame, Rocket, Gamepad2, Music, BookOpen, Brain, Sparkles, LayoutGrid } from 'lucide-react';
 
 // Brand icons a pack can choose from by name (keeps lucide tree-shakeable —
 // importing the whole library balloons the bundle). Add more here as needed.
@@ -53,6 +54,7 @@ function App() {
   const { session, updateSession, loading } = useDojoSession();
   const [currentUser, setCurrentUser] = useState(mentor.key);
   const [view, setView] = useState('missions');
+  const [showHub, setShowHub] = useState(false);
 
   const toggleTask = (playerKey, taskId) => {
     const player = session[playerKey];
@@ -117,7 +119,15 @@ function App() {
             <div className="hidden sm:block text-[10px] text-zinc-500 font-mono tracking-wide -mt-1 truncate">{lore.tagline}</div>
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
+          <button
+            onClick={() => setShowHub((v) => !v)}
+            className={`px-3 py-2 rounded-2xl text-sm flex items-center gap-1.5 transition-colors ${
+              showHub ? `${accent.solid} text-white` : 'bg-zinc-900 hover:bg-zinc-800 text-zinc-300'
+            }`}
+          >
+            <LayoutGrid size={15} /> <span className="hidden sm:inline">Rooms</span>
+          </button>
           {players.map((p) => (
             <button
               key={p.key}
@@ -132,6 +142,7 @@ function App() {
         </div>
       </nav>
 
+      {!showHub && (<>
       <div className="border-b border-white/5 px-4 sm:px-8 flex gap-1 overflow-x-auto relative">
         {VIEWS.map((v) => (
           <button
@@ -215,6 +226,9 @@ function App() {
 
         {view === 'handoff' && <HandoffKit />}
       </main>
+      </>)}
+
+      {showHub && <Hub onClose={() => setShowHub(false)} />}
 
       <DockedChat currentUser={currentUser} />
       <ArcadeOverlay

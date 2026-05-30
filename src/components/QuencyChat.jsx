@@ -40,7 +40,14 @@ const QuencyChat = () => {
       const res = await fetch(CHAT_ENDPOINT, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: trimmed, history, model, mode, pack: activePack.id }),
+        body: JSON.stringify({
+          message: trimmed,
+          history,
+          model,
+          mode,
+          pack: activePack.id,
+          system: (modes.find((m) => m.key === mode) || modes[0]).system,
+        }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {

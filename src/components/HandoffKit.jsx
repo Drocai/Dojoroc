@@ -9,7 +9,8 @@ const { handoff, modes } = activePack;
 const accent = themeFor(activePack.brand.accent);
 // The Data-Translator-style mode (used to polish answers); fall back to the
 // last mode or the first if none is named that.
-const translatorMode = (modes.find((m) => m.key === 'translator') || modes[modes.length - 1] || modes[0]).key;
+const translator = modes.find((m) => m.key === 'translator') || modes[modes.length - 1] || modes[0];
+const translatorMode = translator.key;
 
 const HandoffKit = () => {
   const [answers, setAnswers] = useState({ studentName: handoff.studentDefault });
@@ -49,7 +50,7 @@ const HandoffKit = () => {
       const res = await fetch(CHAT_ENDPOINT, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message, model: 'sonnet', mode: translatorMode, pack: activePack.id }),
+        body: JSON.stringify({ message, model: 'sonnet', mode: translatorMode, pack: activePack.id, system: translator.system }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || `Error ${res.status}`);
