@@ -203,6 +203,30 @@ const pack = {
     defaultRoom: 'graysen-dad-build-lab',
   },
 
+  // --- Arcade (dead-time learning mini-games) -------------------------------
+  // tips = flashcards shown in the clicker + on Tetris line clears.
+  // quiz = questions for the shooter (one correct answer per question).
+  arcade: {
+    tips: [
+      'Git saves snapshots of your code called commits — you can always go back.',
+      'Node.js lets you run JavaScript outside the browser.',
+      'In Roblox, a Script runs on the server; a LocalScript runs on the player.',
+      'Lua arrays start at 1, not 0 — watch out!',
+      'print() in Lua is your best friend for finding bugs.',
+      'Shrink a big game idea down to the smallest playable thing first.',
+      'CLAUDE.md tells Claude Code how to work in your project.',
+      'A function is a reusable box of steps you can call by name.',
+    ],
+    quiz: [
+      { q: 'What is a Git "commit"?', answers: ['A saved snapshot of code', 'A type of enemy', 'A Roblox part'], correct: 0 },
+      { q: 'In Roblox, which runs on the player\'s device?', answers: ['LocalScript', 'ServerScript', 'CommitScript'], correct: 0 },
+      { q: 'Lua arrays start counting at…', answers: ['1', '0', '-1'], correct: 0 },
+      { q: 'What does print() help you do in Lua?', answers: ['Find bugs', 'Delete files', 'Win the game'], correct: 0 },
+      { q: 'Best first step for a huge game idea?', answers: ['Build the tiny playable version', 'Build everything at once', 'Quit'], correct: 0 },
+      { q: 'What runs JavaScript outside the browser?', answers: ['Node.js', 'Roblox', 'Git'], correct: 0 },
+    ],
+  },
+
   // --- Handoff Kit (built above from makeHandoff) ---------------------------
   handoff,
 };

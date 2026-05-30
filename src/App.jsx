@@ -6,6 +6,7 @@ import QuencyChat from './components/QuencyChat';
 import FamilyChat from './components/FamilyChat';
 import HandoffKit from './components/HandoffKit';
 import DockedChat from './components/DockedChat';
+import ArcadeOverlay from './components/arcade/ArcadeOverlay';
 import { activePack } from '../packs/index.js';
 import { themeFor } from './lib/theme';
 import { Zap, Trophy, Flame, Rocket, Gamepad2, Music, BookOpen, Brain, Sparkles } from 'lucide-react';
@@ -174,6 +175,7 @@ function App() {
       </main>
 
       <DockedChat currentUser={currentUser} />
+      <ArcadeOverlay currentUser={currentUser} />
     </div>
   );
 }
