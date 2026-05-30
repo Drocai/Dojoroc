@@ -22,6 +22,7 @@ import { ensureRocs, buildRocPrompt, unlockedAbilities } from './lib/rocs';
 import { startProCheckout } from './lib/profile';
 import DailyQuests from './components/DailyQuests';
 import BeatLab from './components/BeatLab';
+import SketchPad from './components/SketchPad';
 import { recordQuest, freshQuests, claimQuest, todaysQuests } from './lib/quests';
 import { streakMultiplier } from './lib/streak';
 // Hub (rooms grid + builder + leaderboard) is code-split — only loads on demand.
@@ -31,7 +32,7 @@ import { themeFor, hexFor } from './lib/theme';
 import { rankFor } from './lib/rank';
 import { bumpStreak } from './lib/streak';
 import { buildMemoryBlock } from './lib/quencyMemory';
-import { Zap, Trophy, Flame, Rocket, Gamepad2, Music, BookOpen, Brain, Sparkles, LayoutGrid, Award, Loader2, Check } from 'lucide-react';
+import { Zap, Trophy, Flame, Rocket, Gamepad2, Music, BookOpen, Brain, Sparkles, LayoutGrid, Award, Loader2, Check, Palette, Trash2 } from 'lucide-react';
 
 const BRAND_ICONS = { Zap, Flame, Rocket, Gamepad2, Music, BookOpen, Brain, Sparkles };
 
@@ -279,6 +280,14 @@ function App() {
                 })}
               />
               {ROOM_ID === 'sound-dojo' && <BeatLab accent={brand.accent} onPlay={() => trackQuest('arcade')} />}
+              {ROOM_ID === 'art-dojo' && (
+                <SketchPad
+                  accent={brand.accent}
+                  savedCount={(data.gallery || []).length}
+                  onDraw={() => trackQuest('arcade')}
+                  onSave={(img) => updateData((d) => ({ ...d, gallery: [img, ...(d.gallery || [])].slice(0, 12) }))}
+                />
+              )}
               <TrackLane title={`${me.label}'s Mission`} tasks={missions} completed={prog.tasks || []} onToggle={toggleTask} />
 
               <div className="hud bg-zinc-900 border border-zinc-800 rounded-3xl p-6">
@@ -378,6 +387,25 @@ function App() {
         {view === 'profile' && (
           <div className="max-w-2xl mx-auto space-y-5">
             <Profile profile={profile} rank={rank} crossTotal={crossTotal} rooms={rooms} scores={prog.scores} streak={data.streak} currentRoomId={ROOM_ID} onLogout={logout} />
+            {(data.gallery || []).length > 0 && (
+              <div className="hud bg-zinc-900 border border-zinc-800 rounded-3xl p-6">
+                <div className="text-sm font-semibold mb-3 flex items-center gap-2"><Palette size={15} className="text-rose-400" /> Art Gallery</div>
+                <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                  {(data.gallery || []).map((img, i) => (
+                    <div key={i} className="relative group">
+                      <img src={img} alt={`Sketch ${i + 1}`} className="w-full rounded-xl border border-zinc-800" />
+                      <button
+                        onClick={() => updateData((d) => ({ ...d, gallery: (d.gallery || []).filter((_, x) => x !== i) }))}
+                        className="absolute top-1 right-1 bg-black/70 rounded-full p-1 text-zinc-300 hover:text-rose-400 opacity-0 group-hover:opacity-100"
+                        aria-label="Delete sketch"
+                      >
+                        <Trash2 size={11} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
             <MyQuency value={data.quency || {}} onChange={(q) => updateData((d) => ({ ...d, quency: q }))} />
             <Toolkit value={data.techniques || []} onChange={(t) => updateData((d) => ({ ...d, techniques: t }))} />
           </div>
