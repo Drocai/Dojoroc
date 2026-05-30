@@ -1,7 +1,7 @@
 // Built-in GYM — art & drawing. Same data shape as the starter.
 
 const SHARED_RULES =
-  '\n\nRules: Respond directly and concisely. You are talking with a parent and their kid, so keep it ' +
+  '\n\nRules: Respond directly and concisely. You are teaching learners of all ages, so keep it ' +
   'friendly, safe, and encouraging. Prefer short, action-first answers. There are no wrong answers in art — ' +
   'focus on trying, looking closely, and small wins.';
 
@@ -14,8 +14,8 @@ const artDojoData = {
   brand: { title: 'ART DOJO', icon: 'Sparkles', accent: 'rose', coreLabel: 'MUSE CORE', coreUnit: 'SPK' },
 
   players: [
-    { key: 'derrick', label: 'Derrick', chatName: 'Dad', color: 'rose', role: 'mentor' },
-    { key: 'graysen', label: 'Graysen', chatName: 'Graysen', color: 'purple', role: 'student' },
+    { key: 'mentor', label: 'Mentor', chatName: 'Mentor', color: 'rose', role: 'mentor' },
+    { key: 'learner', label: 'Learner', chatName: 'Learner', color: 'purple', role: 'student' },
   ],
 
   sensei: {
@@ -28,7 +28,7 @@ const artDojoData = {
   lore: {
     tagline: 'See it. Sketch it. Make it yours.',
     canon:
-      'The Art Dojo is a creative studio where a father and son make things together. ' +
+      'The Art Dojo is a creative studio where a community of learners make things together. ' +
       'Every mission cleared and round played feeds the Muse Core with sparks (SPK). ' +
       'Iris is the AI sensei guiding the climb from stick figures to real art.',
     boot: 'Muse Core online · palette mixed · imagination unlocked',
@@ -50,7 +50,7 @@ const artDojoData = {
       label: 'Drawing Coach',
       note: 'Step-by-step drawing',
       system:
-        'You are Iris, the AI sensei of the Art Dojo. You coach Derrick and his son Graysen in drawing. ' +
+        'You are Iris, the AI sensei of the Art Dojo. You coach your learners in drawing. ' +
         'Break any subject into simple shapes first, then guide them to add detail step by step. ' +
         'Be warm — there are no mistakes, only practice. End with one small thing to try next.' + SHARED_RULES,
     },
@@ -67,12 +67,12 @@ const artDojoData = {
       label: 'Idea Spark',
       note: 'Beat the blank page',
       system:
-        'You are Iris in Idea Spark mode for a kid staring at a blank page. Offer fun, doable prompts and ' +
+        'You are Iris in Idea Spark mode for anyone staring at a blank page. Offer fun, doable prompts and ' +
         'creative what-ifs, building on whatever they like. Keep ideas simple enough to start in one minute.' + SHARED_RULES,
     },
   ],
 
-  chat: { defaultRoom: 'graysen-dad-art-dojo' },
+  chat: { defaultRoom: 'community-art-dojo' },
 
   arcade: {
     tips: [
@@ -105,11 +105,11 @@ const artDojoData = {
   },
 
   handoff: {
-    studentDefault: 'Graysen',
-    projectName: 'Graysen Art Studio',
+    studentDefault: 'Learner',
+    projectName: 'My Art Studio',
     sheetTitle: 'ART DOJO — HANDOFF SETUP SHEET',
     aiPolishTemplate:
-      'Translate these raw kid answers into ONE clean, warm "Personal preferences" block (150-220 words) ' +
+      'Translate these answers into ONE clean, warm "Personal preferences" block (150-220 words) ' +
       'telling Claude how to help {name} learn to draw: shapes-first, encouraging, no such thing as a mistake, ' +
       'one small step at a time. Output only the block text.',
     questionGroups: [
@@ -134,7 +134,7 @@ const artDojoData = {
         key: 'prefs',
         title: 'Claude Profile / Preferences',
         where: 'Settings → Personal preferences',
-        bodyTemplate: `You are helping {name} learn to draw with Dad. Always start from simple shapes, build up step by step, and stay encouraging — there are no mistakes in art, only practice.
+        bodyTemplate: `You are helping {name} learn to draw. Always start from simple shapes, build up step by step, and stay encouraging — there are no mistakes in art, only practice.
 
 {name}'s art:
 - Loves drawing: {artLikes}

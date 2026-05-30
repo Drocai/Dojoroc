@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
 import { activePack } from '../../packs/index.js';
 import { themeFor } from '../lib/theme';
-import { Zap, LogIn, UserPlus, Loader2, KeyRound } from 'lucide-react';
+import { LogIn, UserPlus, Loader2, KeyRound } from 'lucide-react';
 
 const accent = themeFor(activePack.brand.accent);
-const { brand, sensei, lore } = activePack;
 const COLORS = ['emerald', 'purple', 'blue', 'amber', 'rose', 'cyan'];
 
 // Sign in or create a profile. A profile carries your XP, rank, scores and
@@ -43,15 +42,16 @@ const AuthScreen = ({ onSignUp, onLogin, onReset }) => {
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-[#0a0a0f] overflow-auto">
       <div className="dojo-fx" aria-hidden="true" />
-      <div className="hud relative w-[min(95vw,440px)] bg-zinc-900/80 border border-white/15 rounded-3xl p-7 shadow-2xl shadow-black/60">
-        <div className="flex items-center gap-2 mb-1">
-          <Zap className={accent.text} />
-          <div className="font-display tracking-wide dojo-glow">{brand.title}</div>
+      <div className="hud relative w-[min(95vw,420px)] bg-zinc-900/80 border border-white/15 rounded-3xl p-7 shadow-2xl shadow-black/60">
+        <div className="text-center mb-5">
+          <div className="text-5xl mb-2" aria-hidden="true">🪨</div>
+          <div className="font-display text-2xl tracking-wide dojo-glow">SPOUT ROC DOJO</div>
+          <p className="text-sm text-zinc-400 mt-2">
+            {mode === 'signup' ? 'Train your own AI companion. Pick a name and dive in — your Roc levels up with you, on any device.'
+              : mode === 'reset' ? 'Enter your username and recovery code to set a new password.'
+              : 'Welcome back. Log in to your dojo.'}
+          </p>
         </div>
-        <p className="text-sm text-zinc-400 mb-5">
-          {lore.canon} Sign in to {sensei.name} and your progress, rank, and everything you learn follows you —
-          on any device.
-        </p>
 
         {mode === 'reset' ? (
           <div className="mb-5 text-sm font-semibold flex items-center gap-1.5"><KeyRound size={15} className={accent.text} /> Reset your password</div>
@@ -84,7 +84,7 @@ const AuthScreen = ({ onSignUp, onLogin, onReset }) => {
                 value={form.display}
                 onChange={(e) => set('display', e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && submit()}
-                placeholder="Graysen"
+                placeholder="Your name"
                 className="w-full mt-1 bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2.5 text-sm outline-none"
               />
             </div>
@@ -152,7 +152,7 @@ const AuthScreen = ({ onSignUp, onLogin, onReset }) => {
           className={`w-full mt-5 px-4 py-3 rounded-2xl ${accent.btn} text-white text-sm font-semibold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed`}
         >
           {busy ? <Loader2 className="animate-spin" size={16} /> : mode === 'signup' ? <UserPlus size={16} /> : mode === 'reset' ? <KeyRound size={16} /> : <LogIn size={16} />}
-          {mode === 'signup' ? 'Create my profile' : mode === 'reset' ? 'Reset password' : 'Log in'}
+          {mode === 'signup' ? 'Enter the Dojo' : mode === 'reset' ? 'Reset password' : 'Log in'}
         </button>
 
         <div className="text-center mt-3">

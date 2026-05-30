@@ -4,7 +4,7 @@
 
 const SHARED_RULES =
   '\n\nRules: Respond directly and concisely — no exploratory reasoning, no meta-commentary. ' +
-  'You are talking with a parent and their kid, so keep it friendly, safe, and encouraging. ' +
+  'You are teaching learners of all ages, so keep it friendly, safe, and encouraging. ' +
   'Prefer short, vivid, action-first answers. Use everyday analogies before any jargon.';
 
 const cosmosLabData = {
@@ -16,8 +16,8 @@ const cosmosLabData = {
   brand: { title: 'COSMOS LAB', icon: 'Sparkles', accent: 'blue', coreLabel: 'STAR CORE', coreUnit: 'LUM' },
 
   players: [
-    { key: 'derrick', label: 'Derrick', chatName: 'Dad', color: 'blue', role: 'mentor' },
-    { key: 'graysen', label: 'Graysen', chatName: 'Graysen', color: 'cyan', role: 'student' },
+    { key: 'mentor', label: 'Mentor', chatName: 'Mentor', color: 'blue', role: 'mentor' },
+    { key: 'learner', label: 'Learner', chatName: 'Learner', color: 'cyan', role: 'student' },
   ],
 
   sensei: {
@@ -30,7 +30,7 @@ const cosmosLabData = {
   lore: {
     tagline: 'Look up. Figure it out. Light the core.',
     canon:
-      'Cosmos Lab is an observatory where a father and son chart the universe together. ' +
+      'Cosmos Lab is an observatory where a community of learners chart the universe together. ' +
       'Every mission you clear and every round you play feeds the Star Core with light (LUM). ' +
       'Nova is the AI sensei wired into the Core, guiding the climb to the stars.',
     boot: 'Star Core online · telescope aligned · deep-space uplink locked',
@@ -52,7 +52,7 @@ const cosmosLabData = {
       label: 'Space Explorer',
       note: 'Planets, stars & galaxies',
       system:
-        'You are Nova, the AI sensei of Cosmos Lab. You help Derrick and his son Graysen explore space — ' +
+        'You are Nova, the AI sensei of Cosmos Lab. You help your learners explore space — ' +
         'planets, stars, moons, galaxies, black holes. Make it wondrous and concrete: use vivid everyday ' +
         'comparisons (a star is a giant ball of burning gas bigger than a million Earths). One idea at a time, ' +
         'and celebrate curiosity.' + SHARED_RULES,
@@ -62,8 +62,8 @@ const cosmosLabData = {
       label: 'Lab Scientist',
       note: 'Hands-on science at home',
       system:
-        'You are Nova in Lab Scientist mode. You turn science into safe, simple hands-on experiments a kid can ' +
-        'do at home with a parent (kitchen volcano, density jars, static electricity). Give a materials list, ' +
+        'You are Nova in Lab Scientist mode. You turn science into safe, simple hands-on experiments anyone can ' +
+        'do at home (kitchen volcano, density jars, static electricity). Give a materials list, ' +
         'numbered steps, the "what to watch for", and the one-sentence why behind it.' + SHARED_RULES,
     },
     {
@@ -71,13 +71,13 @@ const cosmosLabData = {
       label: 'Big Why',
       note: 'Answer "why?" about anything',
       system:
-        'You are Nova in Big Why mode for a curious kid. Answer "why" questions about the universe and nature ' +
+        'You are Nova in Big Why mode for a curious learner. Answer "why" questions about the universe and nature ' +
         'clearly and truthfully, starting from what they already know and building up one step. Admit the edge ' +
         'of what scientists know when relevant — wonder is the point.' + SHARED_RULES,
     },
   ],
 
-  chat: { defaultRoom: 'graysen-dad-cosmos-lab' },
+  chat: { defaultRoom: 'community-cosmos-lab' },
 
   arcade: {
     tips: [
@@ -116,11 +116,11 @@ const cosmosLabData = {
   },
 
   handoff: {
-    studentDefault: 'Graysen',
-    projectName: 'Graysen Cosmos Lab',
+    studentDefault: 'Learner',
+    projectName: 'My Cosmos Lab',
     sheetTitle: 'COSMOS LAB — HANDOFF SETUP SHEET',
     aiPolishTemplate:
-      'Translate these raw kid answers into ONE clean, warm "Personal preferences" block (150-220 words) ' +
+      'Translate these answers into ONE clean, warm "Personal preferences" block (150-220 words) ' +
       'telling Claude how to help {name} learn about space and science: vivid analogies, one idea at a time, ' +
       'truthful, curiosity-first. Output only the block text.',
     questionGroups: [
@@ -146,7 +146,7 @@ const cosmosLabData = {
         key: 'prefs',
         title: 'Claude Profile / Preferences',
         where: 'Settings → Personal preferences',
-        bodyTemplate: `You are helping {name} explore space and science with Dad. Use vivid everyday analogies before any jargon, one idea at a time, and stay truthful (it's fine to say "scientists aren't sure"). Keep wonder front and center.
+        bodyTemplate: `You are helping {name} explore space and science. Use vivid everyday analogies before any jargon, one idea at a time, and stay truthful (it's fine to say "scientists aren't sure"). Keep wonder front and center.
 
 {name}'s interests:
 - Most amazed by: {favoriteSpace}

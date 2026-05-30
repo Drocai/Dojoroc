@@ -101,7 +101,7 @@ export function validatePack(raw = {}) {
         key: 'sensei',
         label: 'Sensei',
         note: subject,
-        system: `You are the AI sensei for a room about ${subject}. Teach a parent and their kid one small step at a time, friendly and encouraging, action-first, and celebrate small wins.`,
+        system: `You are the AI sensei for a room about ${subject}. Teach learners of all ages one small step at a time, friendly and encouraging, action-first, and celebrate small wins.`,
       },
     ];
   }

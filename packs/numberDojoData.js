@@ -2,7 +2,7 @@
 // + Dojo Map once registered in packs/index.js.
 
 const SHARED_RULES =
-  '\n\nRules: Respond directly and concisely. You are talking with a parent and their kid, so keep it ' +
+  '\n\nRules: Respond directly and concisely. You are teaching learners of all ages, so keep it ' +
   'friendly, safe, and encouraging. Prefer short, action-first answers. Use real-world examples ' +
   '(pizza slices, coins, levels) before symbols, and show one small step at a time.';
 
@@ -15,8 +15,8 @@ const numberDojoData = {
   brand: { title: 'NUMBER DOJO', icon: 'Brain', accent: 'amber', coreLabel: 'LOGIC CORE', coreUnit: 'PTS' },
 
   players: [
-    { key: 'derrick', label: 'Derrick', chatName: 'Dad', color: 'amber', role: 'mentor' },
-    { key: 'graysen', label: 'Graysen', chatName: 'Graysen', color: 'rose', role: 'student' },
+    { key: 'mentor', label: 'Mentor', chatName: 'Mentor', color: 'amber', role: 'mentor' },
+    { key: 'learner', label: 'Learner', chatName: 'Learner', color: 'rose', role: 'student' },
   ],
 
   sensei: {
@@ -29,7 +29,7 @@ const numberDojoData = {
   lore: {
     tagline: 'Every problem is a puzzle. Solve. Level. Repeat.',
     canon:
-      'The Number Dojo is a logic gym where a father and son sharpen their math minds together. ' +
+      'The Number Dojo is a logic gym where a community of learners sharpen their math minds together. ' +
       'Every mission cleared and round played feeds the Logic Core with points (PTS). ' +
       'Axiom is the AI sensei guiding the climb from counting to mastery.',
     boot: 'Logic Core online · proofs aligned · number sense locked',
@@ -51,7 +51,7 @@ const numberDojoData = {
       label: 'Math Tutor',
       note: 'Step-by-step help',
       system:
-        'You are Axiom, the AI sensei of the Number Dojo. You help Derrick and his son Graysen with math — ' +
+        'You are Axiom, the AI sensei of the Number Dojo. You help your learners with math — ' +
         'arithmetic, fractions, word problems, logic. Break every problem into the smallest steps, use real-world ' +
         'examples before symbols, and never just give the answer — guide them to it, then confirm.' + SHARED_RULES,
     },
@@ -68,12 +68,12 @@ const numberDojoData = {
       label: 'Why It Works',
       note: 'The reason behind the rule',
       system:
-        'You are Axiom in Why-It-Works mode. When a kid asks why a math rule works (why you flip to divide fractions, ' +
+        'You are Axiom in Why-It-Works mode. When a learner asks why a math rule works (why you flip to divide fractions, ' +
         'why a negative times a negative is positive), explain the intuition with a concrete picture, simply.' + SHARED_RULES,
     },
   ],
 
-  chat: { defaultRoom: 'graysen-dad-number-dojo' },
+  chat: { defaultRoom: 'community-number-dojo' },
 
   arcade: {
     tips: [
@@ -106,11 +106,11 @@ const numberDojoData = {
   },
 
   handoff: {
-    studentDefault: 'Graysen',
-    projectName: 'Graysen Number Dojo',
+    studentDefault: 'Learner',
+    projectName: 'My Number Dojo',
     sheetTitle: 'NUMBER DOJO — HANDOFF SETUP SHEET',
     aiPolishTemplate:
-      'Translate these raw kid answers into ONE clean, warm "Personal preferences" block (150-220 words) ' +
+      'Translate these answers into ONE clean, warm "Personal preferences" block (150-220 words) ' +
       'telling Claude how to help {name} learn math: real-world examples first, smallest steps, guide-don\'t-tell, ' +
       'patient and encouraging. Output only the block text.',
     questionGroups: [
@@ -135,7 +135,7 @@ const numberDojoData = {
         key: 'prefs',
         title: 'Claude Profile / Preferences',
         where: 'Settings → Personal preferences',
-        bodyTemplate: `You are helping {name} learn math with Dad. Use real-world examples before symbols, break problems into the smallest steps, and guide to the answer rather than just giving it. Stay patient and celebrate progress.
+        bodyTemplate: `You are helping {name} learn math. Use real-world examples before symbols, break problems into the smallest steps, and guide to the answer rather than just giving it. Stay patient and celebrate progress.
 
 {name}'s situation:
 - Working on: {mathLevel}

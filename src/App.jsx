@@ -6,7 +6,6 @@ import QuencyChat from './components/QuencyChat';
 import HandoffKit from './components/HandoffKit';
 import DockedChat from './components/DockedChat';
 import ArcadeOverlay from './components/arcade/ArcadeOverlay';
-import Onboarding from './components/Onboarding';
 import QuencyGuide from './components/QuencyGuide';
 import AuthScreen from './components/AuthScreen';
 import Profile from './components/Profile';
@@ -142,7 +141,6 @@ function App() {
   const crossTotal = Object.values(rooms).reduce((s, r) => s + (r.xp || 0) + (r.bonusXp || 0), 0) + (rooms[ROOM_ID] ? 0 : roomTotal);
   const rank = rankFor(crossTotal);
   const focusMission = missions.find((m) => !(prog.tasks || []).includes(m.id)) || null;
-  const onboarded = data.onboarded === true;
 
   // Active Roc (the trainable companion that travels with you + powers chat).
   const rocs = data.rocs || {};
@@ -479,11 +477,10 @@ function App() {
       <RocReaction roc={activeRoc} event={reaction} />
       <QuencyGuide
         displayName={me.label}
-        ready={onboarded}
+        ready
         onNavigate={(v) => { setShowHub(false); setView(v); }}
         onOpenHub={() => setShowHub(true)}
       />
-      {!onboarded && <Onboarding name={me.label} onDone={() => updateData((d) => ({ ...d, onboarded: true }))} />}
       {pendingRecovery && <RecoveryModal username={pendingRecovery.username} code={pendingRecovery.code} onClose={clearRecovery} />}
     </div>
   );

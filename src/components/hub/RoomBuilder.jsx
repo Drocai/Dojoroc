@@ -24,7 +24,7 @@ Schema:
 Age-appropriate, specifically about the requested subject. ONLY the JSON object.`;
 
 const RoomBuilder = ({ accent, onClose, profile }) => {
-  const [form, setForm] = useState({ subject: '', student: profile?.display_name || '', mentor: 'Dad', level: '', firstWin: '', vibe: '' });
+  const [form, setForm] = useState({ subject: '', student: profile?.display_name || '', mentor: 'Mentor', level: '', firstWin: '', vibe: '' });
   const [status, setStatus] = useState('');
   const [busy, setBusy] = useState(false);
   const [draft, setDraft] = useState(null); // validated data pack
@@ -51,7 +51,7 @@ const RoomBuilder = ({ accent, onClose, profile }) => {
     const brief =
       `Design a learning room.\n` +
       `Subject / what we want to build or learn: ${form.subject}\n` +
-      `Mentor name: ${form.mentor || 'Dad'}\n` +
+      `Mentor name: ${form.mentor || 'Mentor'}\n` +
       `Student name: ${form.student || 'Student'}\n` +
       `Current level: ${form.level || 'beginner'}\n` +
       `First tiny win to aim for: ${form.firstWin || 'a small first success'}\n` +
@@ -131,8 +131,8 @@ const RoomBuilder = ({ accent, onClose, profile }) => {
             />
           </div>
           <div className="grid sm:grid-cols-2 gap-3">
-            <Field label="Mentor name" k="mentor" placeholder="Dad" />
-            <Field label="Student name" k="student" placeholder="Graysen" />
+            <Field label="Mentor name" k="mentor" placeholder="Mentor" />
+            <Field label="Student name" k="student" placeholder="Learner" />
             <Field label="Current level" k="level" placeholder="total beginner" />
             <Field label="First tiny win" k="firstWin" placeholder="spawn one enemy" />
           </div>

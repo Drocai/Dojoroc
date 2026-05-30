@@ -6,7 +6,7 @@
 
 const SHARED_RULES =
   '\n\nRules: Respond directly and concisely — no exploratory reasoning, no meta-commentary about your process. ' +
-  'You are talking with a parent and their kid, so keep it friendly, safe, and encouraging. ' +
+  'You are teaching learners of all ages, so keep it friendly, safe, and encouraging. ' +
   'Prefer short, action-first answers. When giving commands or code, show them one small step at a time.';
 
 const frequencyDojoData = {
@@ -18,8 +18,8 @@ const frequencyDojoData = {
   brand: { title: 'FREQUENCY DOJO', icon: 'Zap', accent: 'emerald', coreLabel: 'DOJO CORE', coreUnit: 'HZ' },
 
   players: [
-    { key: 'derrick', label: 'Derrick', chatName: 'Dad', color: 'emerald', role: 'mentor' },
-    { key: 'graysen', label: 'Graysen', chatName: 'Graysen', color: 'purple', role: 'student' },
+    { key: 'mentor', label: 'Mentor', chatName: 'Mentor', color: 'emerald', role: 'mentor' },
+    { key: 'learner', label: 'Learner', chatName: 'Learner', color: 'purple', role: 'student' },
   ],
 
   sensei: {
@@ -32,7 +32,7 @@ const frequencyDojoData = {
   lore: {
     tagline: 'Tune your frequency. Build the future.',
     canon:
-      'The Frequency Dojo is a training rig where a father and son overclock their skills together. ' +
+      'The Frequency Dojo is a training rig where a community of learners overclock their skills together. ' +
       'Every mission you clear and every round you play raises your Frequency (Hz) and feeds the Dojo Core. ' +
       'Quency is the AI sensei wired into the Core, guiding the climb.',
     boot: 'Dojo Core online · Hermes uplink established · frequency locked',
@@ -54,7 +54,7 @@ const frequencyDojoData = {
       label: 'Hermes Sensei',
       note: 'Tool & Claude Code setup',
       system:
-        'You are Quency, the AI sensei of the Frequency Dojo. You help Derrick and his son Graysen ' +
+        'You are Quency, the AI sensei of the Frequency Dojo. You help your learners ' +
         'install and learn developer tools — Git, Node.js, Claude Code, and the Hermes Agent. ' +
         'Walk them through setup one command at a time, explain what each step does in plain language, ' +
         'and celebrate small wins. If something errors, diagnose the simplest cause first.' +
@@ -76,14 +76,14 @@ const frequencyDojoData = {
       label: 'Game Coach',
       note: 'Roblox / Lua game building',
       system:
-        'You are Quency, a game-building coach for Graysen, who builds Roblox/Lua games and is learning to code. ' +
+        'You are Quency, a game-building coach for learners who build Roblox/Lua games and are learning to code. ' +
         'Keep it fun and motivating. Shrink big game ideas into the smallest playable first build, ' +
         'give Lua examples when helpful, and always end with one concrete next step.' +
         SHARED_RULES,
     },
   ],
 
-  chat: { defaultRoom: 'graysen-dad-build-lab' },
+  chat: { defaultRoom: 'community-build-lab' },
 
   arcade: {
     tips: [
@@ -123,11 +123,11 @@ const frequencyDojoData = {
   },
 
   handoff: {
-    studentDefault: 'Graysen',
-    projectName: 'Graysen Build Lab',
+    studentDefault: 'Learner',
+    projectName: 'My Build Lab',
     sheetTitle: 'FREQUENCY DOJO — HANDOFF SETUP SHEET',
     aiPolishTemplate:
-      'Translate these raw kid answers into ONE clean, warm "Personal preferences" block (150-220 words) ' +
+      'Translate these answers into ONE clean, warm "Personal preferences" block (150-220 words) ' +
       'telling Claude how to help {name}, who builds Roblox games and is learning to code: short action-first ' +
       'answers, small working builds, beginner-friendly but not condescending. Output only the block text.',
     questionGroups: [
@@ -170,7 +170,7 @@ const frequencyDojoData = {
         key: 'prefs',
         title: 'Claude Profile / Preferences',
         where: 'Settings → Profile / Personal preferences',
-        bodyTemplate: `You are helping {name} learn game building, coding, Roblox/Lua, and practical AI-assisted development under Dad's supervision. Keep answers clear, short, and action-first. Prefer small working builds over theory dumps. When coding, explain the goal, give the working code, then a tiny test checklist.
+        bodyTemplate: `You are helping {name} learn game building, coding, Roblox/Lua, and practical AI-assisted development. Keep answers clear, short, and action-first. Prefer small working builds over theory dumps. When coding, explain the goal, give the working code, then a tiny test checklist.
 
 {name}'s interests:
 - Favorite games: {favoriteGames}
@@ -202,7 +202,7 @@ Default behavior:
         where: 'Repo root → CLAUDE.md',
         bodyTemplate: `# {name} Build Lab
 
-You are helping {name} build games and learn coding under Dad's supervision.
+You are helping {name} build games and learn coding.
 
 Working rules:
 - Keep explanations short, clear, and practical.

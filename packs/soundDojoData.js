@@ -1,7 +1,7 @@
 // Built-in GYM — music & sound. Same data shape as the starter.
 
 const SHARED_RULES =
-  '\n\nRules: Respond directly and concisely. You are talking with a parent and their kid, so keep it ' +
+  '\n\nRules: Respond directly and concisely. You are teaching learners of all ages, so keep it ' +
   'friendly, safe, and encouraging. Prefer short, action-first answers. Let them make sound and play ' +
   'before theory — music is something you do, not just read.';
 
@@ -14,8 +14,8 @@ const soundDojoData = {
   brand: { title: 'SOUND DOJO', icon: 'Music', accent: 'purple', coreLabel: 'BEAT CORE', coreUnit: 'BPM' },
 
   players: [
-    { key: 'derrick', label: 'Derrick', chatName: 'Dad', color: 'purple', role: 'mentor' },
-    { key: 'graysen', label: 'Graysen', chatName: 'Graysen', color: 'cyan', role: 'student' },
+    { key: 'mentor', label: 'Mentor', chatName: 'Mentor', color: 'purple', role: 'mentor' },
+    { key: 'learner', label: 'Learner', chatName: 'Learner', color: 'cyan', role: 'student' },
   ],
 
   sensei: {
@@ -28,7 +28,7 @@ const soundDojoData = {
   lore: {
     tagline: 'Feel the beat. Build the song.',
     canon:
-      'The Sound Dojo is a music lab where a father and son make beats and songs together. ' +
+      'The Sound Dojo is a music lab where a community of learners make beats and songs together. ' +
       'Every mission cleared and round played feeds the Beat Core (BPM). ' +
       'Tempo is the AI sensei guiding the climb from clapping rhythms to writing songs.',
     boot: 'Beat Core online · metronome synced · groove locked',
@@ -50,7 +50,7 @@ const soundDojoData = {
       label: 'Music Coach',
       note: 'Rhythm, melody & basics',
       system:
-        'You are Tempo, the AI sensei of the Sound Dojo. You coach Derrick and his son Graysen in music — ' +
+        'You are Tempo, the AI sensei of the Sound Dojo. You coach your learners in music — ' +
         'rhythm, melody, and how songs are built. Get them clapping, humming, or tapping before any theory. ' +
         'Use counts (1-2-3-4) and simple patterns. End with one thing to try out loud.' + SHARED_RULES,
     },
@@ -72,7 +72,7 @@ const soundDojoData = {
     },
   ],
 
-  chat: { defaultRoom: 'graysen-dad-sound-dojo' },
+  chat: { defaultRoom: 'community-sound-dojo' },
 
   arcade: {
     tips: [
@@ -105,11 +105,11 @@ const soundDojoData = {
   },
 
   handoff: {
-    studentDefault: 'Graysen',
-    projectName: 'Graysen Sound Lab',
+    studentDefault: 'Learner',
+    projectName: 'My Sound Lab',
     sheetTitle: 'SOUND DOJO — HANDOFF SETUP SHEET',
     aiPolishTemplate:
-      'Translate these raw kid answers into ONE clean, warm "Personal preferences" block (150-220 words) ' +
+      'Translate these answers into ONE clean, warm "Personal preferences" block (150-220 words) ' +
       'telling Claude how to help {name} make music: do-before-theory, counts and claps, playful, build on ' +
       'their favorite music. Output only the block text.',
     questionGroups: [
@@ -134,7 +134,7 @@ const soundDojoData = {
         key: 'prefs',
         title: 'Claude Profile / Preferences',
         where: 'Settings → Personal preferences',
-        bodyTemplate: `You are helping {name} learn music with Dad. Get them clapping, humming, or tapping before any theory, use counts (1-2-3-4), and build on the music they already love.
+        bodyTemplate: `You are helping {name} learn music. Get them clapping, humming, or tapping before any theory, use counts (1-2-3-4), and build on the music they already love.
 
 {name}'s music:
 - Loves listening to: {musicLikes}

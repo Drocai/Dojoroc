@@ -47,7 +47,7 @@ const QuencyGuide = ({ onNavigate, onOpenHub, displayName, ready = true }) => {
   const advance = () => {
     const s = STEPS[step];
     if (s.go) onNavigate?.(s.go);
-    if (step >= STEPS.length - 1) return dismiss();
+    if (step >= STEPS.length - 1) { onOpenHub?.(); return dismiss(); }
     setStep(step + 1);
   };
 
