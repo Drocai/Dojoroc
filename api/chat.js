@@ -77,6 +77,10 @@ export default async function handler(req, res) {
         .map((m) => ({ role: m.role, content: m.content }))
     : [];
 
+  // The Anthropic API requires the first message to be from the user. The UI's
+  // opening greeting is an assistant turn, so drop any leading assistant turns.
+  while (priorTurns.length && priorTurns[0].role === 'assistant') priorTurns.shift();
+
   const messages = [...priorTurns, { role: 'user', content: message.slice(0, 8000) }];
 
   const client = new Anthropic({ apiKey });
