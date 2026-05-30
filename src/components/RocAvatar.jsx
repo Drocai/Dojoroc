@@ -1,6 +1,7 @@
 import React from 'react';
 import { hexFor } from '../lib/theme';
 import { SPECIES } from '../lib/rocs';
+import { spriteFor } from '../lib/rocSprites';
 
 // Procedural SVG Roc — a little training rock with belt-colored band + per-
 // species features. Hybrid: if the species has a `sprite` URL we render that
@@ -8,7 +9,9 @@ import { SPECIES } from '../lib/rocs';
 const RocAvatar = ({ roc, size = 96, beltColor, idle = false, poke = false }) => {
   const sp = SPECIES[roc?.species] || {};
   const cls = poke ? 'roc-pop' : idle ? 'roc-idle' : undefined;
-  if (sp.sprite) return <img className={cls} src={sp.sprite} width={size} height={size} alt={roc?.name || sp.name} style={{ imageRendering: 'pixelated' }} />;
+  // Drop-in art wins: a file at src/assets/rocs/<species>.png replaces the SVG.
+  const sprite = sp.sprite || spriteFor(roc?.species);
+  if (sprite) return <img className={cls} src={sprite} width={size} height={size} alt={roc?.name || sp.name} style={{ imageRendering: 'pixelated', objectFit: 'contain' }} />;
 
   const c = hexFor(roc?.color || sp.color || 'emerald');
   const belt = hexFor(beltColor || roc?.color || 'amber');

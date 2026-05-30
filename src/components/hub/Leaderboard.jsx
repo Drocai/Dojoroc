@@ -3,6 +3,7 @@ import { Trophy, Award, Loader2 } from 'lucide-react';
 import { leaderboard } from '../../lib/profile';
 import { rankFor } from '../../lib/rank';
 import { themeFor } from '../../lib/theme';
+import RocAvatar from '../RocAvatar';
 
 // The dojo ladder — every learner ranked by total XP across all their rooms.
 // Safe public fields only (no private data leaves the database functions).
@@ -41,12 +42,21 @@ const Leaderboard = ({ meUsername, onPick }) => {
               }`}
             >
               <span className="w-6 text-center text-xs text-zinc-500">{['🥇', '🥈', '🥉'][i] || <span className="font-mono">{i + 1}</span>}</span>
-              <span className={`w-7 h-7 rounded-xl ${theme.solid} flex items-center justify-center text-white text-xs font-black flex-shrink-0`}>
-                {(r.display_name || r.username).slice(0, 1).toUpperCase()}
-              </span>
+              {r.top_roc ? (
+                <span className="w-8 h-8 flex items-center justify-center flex-shrink-0" title={r.top_roc.name}>
+                  <RocAvatar roc={r.top_roc} size={32} />
+                </span>
+              ) : (
+                <span className={`w-7 h-7 rounded-xl ${theme.solid} flex items-center justify-center text-white text-xs font-black flex-shrink-0`}>
+                  {(r.display_name || r.username).slice(0, 1).toUpperCase()}
+                </span>
+              )}
               <span className="flex-1 min-w-0">
                 <span className="text-sm text-zinc-200 truncate block">{r.display_name}</span>
-                <span className={`text-[10px] flex items-center gap-1 ${theme.text}`}><Award size={9} /> {rank.name}</span>
+                <span className={`text-[10px] flex items-center gap-1 ${theme.text}`}>
+                  <Award size={9} /> {rank.name}
+                  {r.top_roc?.name && <span className="text-zinc-500 truncate">· {r.top_roc.name}</span>}
+                </span>
               </span>
               <span className="text-right">
                 <span className="font-mono text-sm text-zinc-200">{r.total_xp || 0}</span>

@@ -3,6 +3,7 @@ import { Award, DoorOpen, Loader2, Swords, BookOpen, Share2, Check } from 'lucid
 import { publicProfile } from '../lib/profile';
 import { rankFor } from '../lib/rank';
 import { themeFor } from '../lib/theme';
+import RocAvatar from './RocAvatar';
 import { activePack } from '../../packs/index.js';
 
 // A shareable, public portfolio page (no login needed) — a learner's landing
@@ -74,6 +75,19 @@ const PublicProfile = ({ username }) => {
             <div className="text-[10px] uppercase tracking-wide text-zinc-500 flex items-center justify-center gap-1"><BookOpen size={11} /> Rooms trained</div>
           </div>
         </div>
+
+        {p.top_roc && (
+          <div className="flex items-center gap-3 mt-4 bg-zinc-950 border border-zinc-800 rounded-2xl p-3">
+            <div className="w-14 h-14 rounded-2xl bg-zinc-900 flex items-center justify-center flex-shrink-0">
+              <RocAvatar roc={p.top_roc} size={48} idle />
+            </div>
+            <div className="min-w-0">
+              <div className="text-[10px] uppercase tracking-wide text-zinc-500">Signature Roc</div>
+              <div className="text-sm font-semibold truncate">{p.top_roc.name}</div>
+              <div className={`text-xs ${theme.text}`}>{rankFor(p.top_roc.xp || 0).name} · {p.top_roc.xp || 0} XP</div>
+            </div>
+          </div>
+        )}
 
         {since && <div className="text-[11px] text-zinc-600 text-center mt-4">Training in the dojo since {since}</div>}
 
