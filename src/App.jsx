@@ -296,6 +296,8 @@ function App() {
               rocs={rocs}
               accountXp={crossTotal}
               currentGym={{ id: ROOM_ID, name: brand.title }}
+              pro={data.pro === true}
+              onGoPro={() => alert('Pro tier is coming soon — legendary Rocs and exclusive wardrobe. Stay tuned!')}
               activeRocId={data.activeRocId}
               onSetActive={(id) => updateData((d) => ({ ...d, activeRocId: id }))}
               onRename={(id, name) => updateRoc(id, { name })}

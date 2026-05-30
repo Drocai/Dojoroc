@@ -33,6 +33,20 @@ export const BESTIARY = [
 ];
 
 export const SPECIES = Object.fromEntries(BESTIARY.map((s) => [s.key, s]));
+
+// Premium (Pro) species — playable to unlock by belt, but recruiting them
+// requires Pro. Free-first: with FEATURE_PREMIUM off, nothing is gated.
+export const PRO_SPECIES = new Set(['sensei-stone', 'guardian-gargoyle']);
+// Master switch — flip to true (or set VITE_PREMIUM=1) to turn gating on. Until
+// then everything is free and the Pro badge is purely cosmetic/aspirational.
+export const FEATURE_PREMIUM =
+  (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_PREMIUM === '1') || false;
+
+export const isPro = (data) => data?.pro === true;
+export const isProSpecies = (key) => PRO_SPECIES.has(key);
+// A species is locked only when premium is ON, it's a Pro species, and the user
+// isn't Pro. Belt-unlock is checked separately.
+export const proLocked = (key, data) => FEATURE_PREMIUM && isProSpecies(key) && !isPro(data);
 // Free starters anyone can adopt now; the rest unlock via play later.
 export const STARTER_KEYS = ['zen-pebble', 'makiwara-rock', 'nunchuck-rocks', 'bo-staffali'];
 

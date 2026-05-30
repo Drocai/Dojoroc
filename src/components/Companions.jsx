@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { Award, Check, Plus, Pencil, Sparkles, MapPin, Lock } from 'lucide-react';
 import RocAvatar from './RocAvatar';
-import { BESTIARY, SPECIES, RARITIES, PERSONAS, makeRoc, rocBelt, unlockedAbilities, availablePersonas, ownedCosmetics, rocMastery, collectionProgress, speciesUnlocked, SPECIES_UNLOCK } from '../lib/rocs';
+import { BESTIARY, SPECIES, RARITIES, PERSONAS, makeRoc, rocBelt, unlockedAbilities, availablePersonas, ownedCosmetics, rocMastery, collectionProgress, speciesUnlocked, SPECIES_UNLOCK, isProSpecies, proLocked, FEATURE_PREMIUM } from '../lib/rocs';
 import { BELTS } from '../lib/rank';
+import { Crown } from 'lucide-react';
 import { themeFor } from '../lib/theme';
 
 // Your stable of Rocs: see them, pick the active one (travels with you + powers
 // chat), rename, switch personality, and adopt a free starter.
-const Companions = ({ rocs = {}, accountXp = 0, currentGym, activeRocId, onSetActive, onRename, onSetPersona, onAdopt, onEquip }) => {
+const Companions = ({ rocs = {}, accountXp = 0, currentGym, pro = false, activeRocId, onSetActive, onRename, onSetPersona, onAdopt, onEquip, onGoPro }) => {
   const list = Object.values(rocs);
   const active = rocs[activeRocId];
   const [editing, setEditing] = useState(false);
@@ -21,6 +22,16 @@ const Companions = ({ rocs = {}, accountXp = 0, currentGym, activeRocId, onSetAc
 
   return (
     <div className="space-y-5">
+      {FEATURE_PREMIUM && !pro && (
+        <button onClick={onGoPro} className="w-full hud bg-gradient-to-r from-amber-500/15 to-amber-600/5 border border-amber-500/40 rounded-3xl p-4 flex items-center gap-3 text-left hover:from-amber-500/25">
+          <Crown size={20} className="text-amber-400 flex-shrink-0" />
+          <div className="flex-1 min-w-0">
+            <div className="text-sm font-semibold text-amber-300">Go Pro</div>
+            <div className="text-xs text-zinc-400">Recruit legendary Rocs + exclusive wardrobe.</div>
+          </div>
+          <span className="text-xs px-3 py-1.5 rounded-xl bg-amber-500 text-zinc-900 font-semibold">Upgrade</span>
+        </button>
+      )}
       {active && (
         <div className="hud bg-zinc-900 border border-zinc-800 rounded-3xl p-6">
           <div className="flex items-center gap-4">
@@ -128,15 +139,19 @@ const Companions = ({ rocs = {}, accountXp = 0, currentGym, activeRocId, onSetAc
             const unlocked = speciesUnlocked(sp.key, accountXp);
             const t = themeFor(sp.color);
             const needBelt = BELTS[SPECIES_UNLOCK[sp.key] ?? 0]?.name;
+            const isPremium = isProSpecies(sp.key);
+            const lockedByPro = proLocked(sp.key, { pro });
             return (
-              <div key={sp.key} className={`rounded-2xl p-3 border text-center ${have ? `${t.border}` : 'border-zinc-800'} ${!unlocked && !have ? 'opacity-50' : ''}`}>
+              <div key={sp.key} className={`rounded-2xl p-3 border text-center relative ${have ? `${t.border}` : 'border-zinc-800'} ${(!unlocked && !have) || lockedByPro ? 'opacity-50' : ''}`}>
+                {isPremium && <Crown size={12} className="absolute top-2 left-2 text-amber-400" title="Pro Roc" />}
                 <div className="flex justify-center relative">
-                  <div className={!unlocked && !have ? 'grayscale opacity-60' : ''}><RocAvatar roc={{ species: sp.key, color: sp.color }} size={48} /></div>
+                  <div className={(!unlocked && !have) || lockedByPro ? 'grayscale opacity-60' : ''}><RocAvatar roc={{ species: sp.key, color: sp.color }} size={48} /></div>
                   {!unlocked && !have && <Lock size={14} className="absolute top-0 right-2 text-zinc-500" />}
                 </div>
                 <div className="text-[11px] font-semibold truncate mt-1">{sp.name}</div>
                 <div className={`text-[9px] ${t.text}`}>{RARITIES[sp.rarity]?.label}</div>
                 {have ? <div className="text-[9px] text-zinc-600 mt-1 flex items-center justify-center gap-0.5"><Check size={9} /> Owned</div>
+                  : lockedByPro ? <button onClick={onGoPro} className="mt-1 text-[10px] px-2 py-1 rounded-lg bg-amber-500 hover:bg-amber-400 text-zinc-900 font-semibold flex items-center gap-1 mx-auto"><Crown size={10} /> Pro</button>
                   : unlocked ? <button onClick={() => onAdopt(makeRoc(sp.key))} className={`mt-1 text-[10px] px-2 py-1 rounded-lg ${t.btn} text-white flex items-center gap-1 mx-auto`}><Plus size={10} /> Recruit</button>
                   : <div className="text-[9px] text-zinc-600 mt-1">{needBelt}</div>}
               </div>

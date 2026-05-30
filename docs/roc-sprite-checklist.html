@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Spout Roc — Sprite Checklist for Artists</title>
+<style>
+  body { margin:0; background:#0a0a0f; color:#e5e7eb; font-family:ui-sans-serif,system-ui,sans-serif; padding:32px; }
+  h1 { font-size:22px; letter-spacing:1px; }
+  p.lead { color:#9ca3af; max-width:680px; line-height:1.6; }
+  code { background:#18181b; padding:2px 7px; border-radius:6px; color:#fcd34d; font-size:13px; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:16px; margin-top:24px; }
+  .card { background:#18181b; border:1px solid #27272a; border-radius:18px; padding:16px; }
+  .name { font-weight:700; font-size:15px; }
+  .title { color:#9ca3af; font-size:12px; }
+  .meta { font-size:11px; color:#a1a1aa; margin-top:8px; line-height:1.7; }
+  .file { display:inline-block; margin-top:8px; }
+  .rar { font-size:10px; text-transform:uppercase; letter-spacing:1px; }
+  .pro { color:#fbbf24; font-weight:700; }
+  .spec { display:flex; align-items:center; gap:12px; }
+  svg { background:#0a0a0f; border-radius:12px; }
+  .note { background:#1e1b4b22; border:1px solid #4338ca55; border-radius:14px; padding:14px 18px; margin-top:20px; font-size:13px; color:#c7d2fe; max-width:680px; }
+</style>
+</head>
+<body>
+<h1>🪨 The Spout Roc Dojo — Sprite Checklist</h1>
+<p class="lead">
+  To replace any Roc's placeholder art with your own: export a <b>transparent, square PNG</b>
+  (256×256 or larger), name it <b>exactly</b> the filename shown, and drop it in
+  <code>src/assets/rocs/</code>. No code changes — it swaps in automatically and inherits the
+  idle/cheer animations. You can do them one at a time. The little vector below each name is the
+  current placeholder, just for reference — match the <i>vibe</i>, not the shapes.
+</p>
+<div class="note">
+  <b>Suggested style:</b> a chibi training rock character, bold outline, readable at 32px (it
+  appears small on the leaderboard). Keep a consistent baseline so they line up. The belt color is
+  drawn by the app on top in some places, but bake a belt into the art too for the hero view.
+</div>
+<div class="grid" id="grid"></div>
+
+<script>
+const C = { emerald:['#10b981','#059669','#052e16'], cyan:['#22d3ee','#0891b2','#053345'],
+  blue:['#3b82f6','#2563eb','#0c1f4d'], amber:['#f59e0b','#d97706','#3a2406'],
+  rose:['#f43f5e','#e11d48','#4c0519'], purple:['#a855f7','#7c3aed','#2e1065'] };
+const RAR = { common:'#9ca3af', uncommon:'#10b981', rare:'#3b82f6', epic:'#a855f7', legendary:'#f59e0b' };
+const PERS = { 'calm-sensei':'🧘 Calm Sensei','hype-coach':'🔥 Hype Coach','trickster':'🥷 Trickster','strict-master':'🥋 Strict Master','curious':'🔭 Curious' };
+const PRO = new Set(['sensei-stone','guardian-gargoyle']);
+
+const BESTIARY = [
+  { key:'zen-pebble', name:'Zen Pebble', title:'The Calm', rarity:'common', color:'cyan', feature:'topknot', persona:'calm-sensei', blurb:'Patient and steady. Learns deeply, never rushes.' },
+  { key:'makiwara-rock', name:'Makiwara Rock', title:'The Grinder', rarity:'common', color:'amber', feature:'band', persona:'strict-master', blurb:'Reps over everything. Drills until it sticks.' },
+  { key:'nunchuck-rocks', name:'Nunchuck Rocks', title:'The Quick', rarity:'uncommon', color:'emerald', feature:'nunchuck', persona:'hype-coach', blurb:'Fast and playful. Loves quizzes and combos.' },
+  { key:'bo-staffali', name:'Bo Staffali', title:'The Disciplined', rarity:'uncommon', color:'blue', feature:'staff', persona:'calm-sensei', blurb:'Balanced and precise. Great for step-by-step.' },
+  { key:'smash-boulder', name:'Smash Boulder', title:'The Mighty', rarity:'rare', color:'rose', feature:'horns', persona:'hype-coach', blurb:'Big energy. Powers through hard challenges.' },
+  { key:'sumo-bava', name:'Sumo Bava', title:'The Immovable', rarity:'rare', color:'amber', feature:'belt2', persona:'strict-master', blurb:'Grounded and tough. Holds knowledge firm.' },
+  { key:'ninja-obsidian', name:'Ninja Obsidian', title:'The Shadow', rarity:'epic', color:'purple', feature:'mask', persona:'trickster', blurb:'Sharp and clever. Finds the elegant shortcut.' },
+  { key:'guardian-gargoyle', name:'Guardian Gargoyle', title:'The Protector', rarity:'epic', color:'blue', feature:'wings', persona:'strict-master', blurb:'Loyal and wise. Guards everything you teach it.' },
+  { key:'pa-geode', name:'Pa Geode', title:'The Bright', rarity:'rare', color:'purple', feature:'crystal', persona:'curious', blurb:'Curious and crystalline. Sparks new ideas.' },
+  { key:'sensei-stone', name:'Sensei Stone', title:'The Master', rarity:'legendary', color:'emerald', feature:'beard', persona:'calm-sensei', blurb:'The grandmaster. Carries the deepest wisdom.' },
+];
+
+function svg(sp){
+  const [base,deep,dark]=C[sp.color]||C.emerald; const f=sp.feature; const belt=C.amber;
+  return `<svg viewBox="0 0 100 100" width="84" height="84"><defs><radialGradient id="g${sp.key}" cx="50%" cy="38%" r="70%"><stop offset="0%" stop-color="${base}"/><stop offset="100%" stop-color="${deep}"/></radialGradient></defs>
+  ${f==='wings'?`<path d="M18 50 Q2 40 8 64 Q16 60 24 62 Z" fill="${deep}"/><path d="M82 50 Q98 40 92 64 Q84 60 76 62 Z" fill="${deep}"/>`:''}
+  <path d="M28 30 Q24 18 38 16 Q50 8 64 16 Q78 18 74 32 Q84 44 76 60 Q78 78 58 82 Q44 88 34 80 Q20 74 24 56 Q18 44 28 30 Z" fill="url(#g${sp.key})" stroke="${dark}" stroke-width="2"/>
+  <ellipse cx="42" cy="46" rx="5.5" ry="6.5" fill="#fff"/><circle cx="43" cy="47" r="3" fill="#0a0a0f"/>
+  <ellipse cx="60" cy="46" rx="5.5" ry="6.5" fill="#fff"/><circle cx="61" cy="47" r="3" fill="#0a0a0f"/>
+  <rect x="24" y="62" width="52" height="8" rx="2" fill="${belt[0]}" stroke="${belt[2]}" stroke-width="1.2"/>
+  <rect x="46" y="60" width="9" height="14" rx="1.5" fill="${belt[0]}" stroke="${belt[2]}" stroke-width="1.2"/>
+  ${f==='topknot'?`<circle cx="51" cy="12" r="6" fill="${deep}"/>`:''}
+  ${f==='band'?`<rect x="30" y="26" width="40" height="6" rx="3" fill="${belt[0]}"/>`:''}
+  ${f==='horns'?`<path d="M30 22 L24 10 L36 20 Z" fill="${dark}"/><path d="M70 22 L76 10 L64 20 Z" fill="${dark}"/>`:''}
+  ${f==='mask'?`<rect x="34" y="40" width="34" height="12" rx="3" fill="#0a0a0f" opacity="0.85"/>`:''}
+  ${f==='crystal'?`<path d="M51 6 L57 16 L51 22 L45 16 Z" fill="${base}" stroke="${dark}"/>`:''}
+  ${f==='beard'?`<path d="M36 70 Q50 92 66 70 Q58 80 50 80 Q42 80 36 70 Z" fill="#e5e7eb" opacity="0.85"/>`:''}
+  ${f==='staff'?`<rect x="80" y="20" width="4" height="60" rx="2" fill="${dark}" transform="rotate(12 82 50)"/>`:''}
+  ${f==='nunchuck'?`<circle cx="84" cy="40" r="4" fill="${dark}"/><circle cx="88" cy="54" r="4" fill="${dark}"/>`:''}
+  </svg>`;
+}
+
+document.getElementById('grid').innerHTML = BESTIARY.map(sp=>`
+  <div class="card">
+    <div class="spec">${svg(sp)}
+      <div><div class="name">${sp.name} ${PRO.has(sp.key)?'<span class="pro">★ PRO</span>':''}</div>
+      <div class="title">${sp.title}</div>
+      <div class="rar" style="color:${RAR[sp.rarity]}">${sp.rarity}</div></div>
+    </div>
+    <div class="meta">
+      “${sp.blurb}”<br>
+      Personality: ${PERS[sp.persona]}<br>
+      Accent color: <b>${sp.color}</b>
+    </div>
+    <div class="file"><code>${sp.key}.png</code></div>
+  </div>`).join('');
+</script>
+</body>
+</html>
