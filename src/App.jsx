@@ -8,6 +8,7 @@ import HandoffKit from './components/HandoffKit';
 import DockedChat from './components/DockedChat';
 import ArcadeOverlay from './components/arcade/ArcadeOverlay';
 import Hub from './components/hub/Hub';
+import Onboarding from './components/Onboarding';
 import { activePack } from '../packs/index.js';
 import { themeFor } from './lib/theme';
 import { Zap, Trophy, Flame, Rocket, Gamepad2, Music, BookOpen, Brain, Sparkles, LayoutGrid } from 'lucide-react';
@@ -55,6 +56,9 @@ function App() {
   const [currentUser, setCurrentUser] = useState(mentor.key);
   const [view, setView] = useState('missions');
   const [showHub, setShowHub] = useState(false);
+  const [onboarded, setOnboarded] = useState(
+    () => typeof localStorage === 'undefined' || localStorage.getItem('dojo.onboarded') === '1'
+  );
 
   const toggleTask = (playerKey, taskId) => {
     const player = session[playerKey];
@@ -238,6 +242,8 @@ function App() {
         focusMission={focusMission}
         onResult={awardArcade}
       />
+
+      {!onboarded && <Onboarding onDone={() => setOnboarded(true)} />}
     </div>
   );
 }

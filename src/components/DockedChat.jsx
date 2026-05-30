@@ -13,7 +13,8 @@ const ROOM_KEY = 'dojo.chat.room';
 
 const DockedChat = ({ currentUser }) => {
   const players = activePack.players;
-  const me = (players.find((p) => p.key === currentUser) || players[0]).chatName;
+  const stored = typeof localStorage !== 'undefined' && localStorage.getItem('dojo.displayName');
+  const me = stored || (players.find((p) => p.key === currentUser) || players[0]).chatName;
   const accent = themeFor(activePack.brand.accent);
 
   const [open, setOpen] = useState(false);

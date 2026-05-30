@@ -11,7 +11,8 @@ const accent = themeFor(brand.accent);
 
 const FamilyChat = ({ currentUser }) => {
   const mePlayer = players.find((p) => p.key === currentUser) || mentor;
-  const me = mePlayer.chatName;
+  const stored = typeof localStorage !== 'undefined' && localStorage.getItem('dojo.displayName');
+  const me = stored || mePlayer.chatName;
   const mineTheme = themeFor(mePlayer.color);
   const [room, setRoom] = useState(chat.defaultRoom);
   const [joined, setJoined] = useState(chat.defaultRoom);
