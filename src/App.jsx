@@ -24,6 +24,7 @@ import DailyQuests from './components/DailyQuests';
 import BeatLab from './components/BeatLab';
 import SketchPad from './components/SketchPad';
 import MathSprint from './components/MathSprint';
+import StarMap from './components/StarMap';
 import { recordQuest, freshQuests, claimQuest, todaysQuests } from './lib/quests';
 import { streakMultiplier } from './lib/streak';
 // Hub (rooms grid + builder + leaderboard) is code-split — only loads on demand.
@@ -280,6 +281,7 @@ function App() {
                   return next;
                 })}
               />
+              {ROOM_ID === 'cosmos-lab' && <StarMap accent={brand.accent} onComplete={() => trackQuest('arcade')} />}
               {ROOM_ID === 'number-dojo' && (
                 <MathSprint
                   accent={brand.accent}
