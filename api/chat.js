@@ -1,48 +1,8 @@
 import Anthropic from '@anthropic-ai/sdk';
+import { getPack } from '../packs/index.js';
 
-// Map the friendly keys the UI sends to real Claude model IDs.
-const MODELS = {
-  opus: 'claude-opus-4-8',
-  sonnet: 'claude-sonnet-4-6',
-  haiku: 'claude-haiku-4-5',
-};
-
-// Per-mode system prompts. Switch the dojo's "brain" depending on what
-// Graysen is being taught: tool onboarding, data translation, or game building.
-const SHARED_RULES =
-  '\n\nRules: Respond directly and concisely — no exploratory reasoning, no meta-commentary about your process. ' +
-  'You are talking with a dad (Derrick) and his son (Graysen), so keep it friendly, safe, and encouraging. ' +
-  'Prefer short, action-first answers. When giving commands or code, show them one small step at a time.';
-
-const MODES = {
-  hermes: {
-    label: 'Hermes Sensei',
-    system:
-      'You are Quency, the AI sensei of the Frequency Dojo. You help Derrick and his son Graysen ' +
-      'install and learn developer tools — Git, Node.js, Claude Code, and the Hermes Agent. ' +
-      'Walk them through setup one command at a time, explain what each step does in plain language, ' +
-      'and celebrate small wins. If something errors, diagnose the simplest cause first.' +
-      SHARED_RULES,
-  },
-  translator: {
-    label: 'Data Translator',
-    system:
-      'You are Quency in Data Translator mode. You help move and reshape data between systems: ' +
-      "taking input from one tool and converting it into the exact format another system needs — " +
-      'for example turning a kid\'s project answers into Claude preferences, a CLAUDE.md file, JSON, ' +
-      'a SQL migration, or a config block. When given source data and a target format, output clean, ' +
-      'ready-to-paste results and briefly say where each piece goes.' +
-      SHARED_RULES,
-  },
-  coach: {
-    label: 'Game Coach',
-    system:
-      'You are Quency, a game-building coach for Graysen, who builds Roblox/Lua games and is learning to code. ' +
-      'Keep it fun and motivating. Shrink big game ideas into the smallest playable first build, ' +
-      'give Lua examples when helpful, and always end with one concrete next step.' +
-      SHARED_RULES,
-  },
-};
+// Models + per-mode system prompts now come from the active pack so a new
+// learnable system is purely a config change (packs/*.js) — no edits here.
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -60,14 +20,21 @@ export default async function handler(req, res) {
 
   // Vercel parses JSON bodies automatically for the Node runtime.
   const body = typeof req.body === 'string' ? safeParse(req.body) : req.body || {};
-  const { message, history = [], model = 'opus', mode = 'hermes' } = body;
+  const { message, history = [], model = 'opus', mode, pack: packId } = body;
 
   if (!message || typeof message !== 'string') {
     return res.status(400).json({ error: 'Missing "message" in request body.' });
   }
 
-  const modelId = MODELS[model] || MODELS.opus;
-  const modeConfig = MODES[mode] || MODES.hermes;
+  const pack = getPack(packId);
+
+  // Build the friendly-key -> real-model-id map and the mode map from the pack.
+  const modelMap = Object.fromEntries(pack.modelOptions.map((m) => [m.key, m.id]));
+  const modeMap = Object.fromEntries(pack.modes.map((m) => [m.key, m]));
+  const defaultMode = pack.modes[0];
+
+  const modelId = modelMap[model] || pack.modelOptions[0].id;
+  const modeConfig = modeMap[mode] || defaultMode;
 
   // Keep only valid prior turns, cap history so the request stays small/fast.
   const priorTurns = Array.isArray(history)
@@ -105,7 +72,7 @@ export default async function handler(req, res) {
     return res.status(200).json({
       reply: reply || "I didn't catch that — try asking again.",
       model: response.model,
-      mode,
+      mode: modeConfig.key,
     });
   } catch (err) {
     const status = err?.status || 500;

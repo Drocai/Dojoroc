@@ -1,15 +1,18 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, MessageSquare } from 'lucide-react';
 import { MODEL_OPTIONS, MODE_OPTIONS, CHAT_ENDPOINT } from '../lib/quency';
+import { activePack } from '../../packs/index.js';
+import { themeFor } from '../lib/theme';
 
-const GREETING = "Hello Sensei. I'm Quency. Pick a model and a mode, then ask me anything.";
+const { sensei, modes, modelOptions } = activePack;
+const accent = themeFor(activePack.brand.accent);
 
 const QuencyChat = () => {
-  const [messages, setMessages] = useState([{ role: 'quency', text: GREETING }]);
+  const [messages, setMessages] = useState([{ role: 'quency', text: sensei.greeting }]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
-  const [model, setModel] = useState('opus');
-  const [mode, setMode] = useState('hermes');
+  const [model, setModel] = useState(modelOptions[0].key);
+  const [mode, setMode] = useState(modes[0].key);
   const chatContainerRef = useRef(null);
 
   const scrollToBottom = () => {
@@ -37,7 +40,7 @@ const QuencyChat = () => {
       const res = await fetch(CHAT_ENDPOINT, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: trimmed, history, model, mode }),
+        body: JSON.stringify({ message: trimmed, history, model, mode, pack: activePack.id }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -55,12 +58,12 @@ const QuencyChat = () => {
   return (
     <div className="bg-zinc-900 border border-zinc-800 rounded-3xl flex flex-col h-[560px] overflow-hidden">
       <div className="px-6 py-4 border-b border-zinc-800 flex items-center gap-3 bg-zinc-950/50">
-        <div className="w-9 h-9 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center">
-          <MessageSquare className="text-emerald-400" size={18} />
+        <div className={`w-9 h-9 rounded-2xl border flex items-center justify-center ${accent.avatar}`}>
+          <MessageSquare className={accent.text} size={18} />
         </div>
         <div className="flex-1">
-          <div className="font-semibold tracking-tight">Quency</div>
-          <div className="text-[10px] text-emerald-400/70 -mt-0.5">AI SENSEI</div>
+          <div className="font-semibold tracking-tight">{sensei.name}</div>
+          <div className={`text-[10px] -mt-0.5 ${accent.textSoft}`}>{sensei.title}</div>
         </div>
       </div>
 
@@ -91,7 +94,7 @@ const QuencyChat = () => {
             <div
               className={`max-w-[82%] px-4 py-3 rounded-3xl text-sm whitespace-pre-wrap ${
                 msg.role === 'user'
-                  ? 'bg-emerald-600 text-white'
+                  ? `${accent.solid} text-white`
                   : msg.role === 'system'
                   ? 'bg-amber-900/30 text-amber-200 border border-amber-800/50'
                   : 'bg-zinc-800 text-zinc-200 border border-zinc-700'
@@ -101,7 +104,7 @@ const QuencyChat = () => {
             </div>
           </div>
         ))}
-        {isTyping && <div className="text-emerald-400 text-xs">Quency is thinking...</div>}
+        {isTyping && <div className={`${accent.text} text-xs`}>{sensei.name} is thinking...</div>}
       </div>
 
       <div className="p-4 border-t border-zinc-800">
@@ -110,13 +113,13 @@ const QuencyChat = () => {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
-            placeholder="Ask Quency anything..."
+            placeholder={sensei.placeholder}
             className="flex-1 bg-zinc-950 border border-zinc-700 rounded-2xl px-4 py-3 text-sm outline-none"
           />
           <button
             onClick={sendMessage}
             disabled={isTyping}
-            className="px-5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 flex items-center justify-center"
+            className={`px-5 rounded-2xl ${accent.btn} disabled:opacity-50 flex items-center justify-center`}
           >
             <Send size={18} />
           </button>

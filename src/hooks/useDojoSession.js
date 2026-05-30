@@ -1,14 +1,19 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
+import { activePack } from '../../packs/index.js';
 
 const DEFAULT_PLAYER = { xp: 0, hz: 100, tasks: [] };
 
+// Seed a player slot for every player the active pack defines, so the session
+// shape follows the pack (not a hard-coded Derrick/Graysen).
+const seedSession = () => {
+  const base = { logs: ['Dojo initialized. Hermes uplink established.'] };
+  for (const p of activePack.players) base[p.key] = { ...DEFAULT_PLAYER };
+  return base;
+};
+
 export function useDojoSession() {
-  const [session, setSession] = useState({
-    derrick: DEFAULT_PLAYER,
-    graysen: DEFAULT_PLAYER,
-    logs: ["Dojo initialized. Hermes uplink established."]
-  });
+  const [session, setSession] = useState(seedSession);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

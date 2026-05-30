@@ -11,6 +11,25 @@ developer tools — built for Derrick & Graysen.
 - **Dad ↔ Graysen** — live Supabase chat room so they can talk while building
 - **Handoff Kit** — turns a kid's plain answers into Claude preferences, project instructions,
   and a CLAUDE.md, with optional AI Polish and one-click submit to Dad
+- **Docked chat** — a floating chat available on *every* screen, so whoever is in the shared
+  project room can talk while they work without leaving what they're doing
+
+## Packs — swappable learnable systems
+
+The dojo is a reusable engine. Everything it teaches — the branding, the players, the missions,
+Quency's modes **and the AI prompts behind them**, and the Handoff questionnaire — lives in a
+single **pack** file under [`packs/`](packs/). The app shell never hard-codes the subject.
+
+To create a new learnable system (e.g. a game you're building together):
+
+1. Copy [`packs/frequency-dojo.js`](packs/frequency-dojo.js) to `packs/<your-pack>.js` and edit
+   the content (brand, players, missions, Quency modes/prompts, handoff questions).
+2. Register it in [`packs/index.js`](packs/index.js) (`import` it and add it to `PACKS`).
+3. Set `VITE_DOJO_PACK=<your-pack>` to make it the active one (defaults to `frequency-dojo`).
+
+Both the front-end and the serverless AI proxy (`/api/chat`) read from the same pack, so the
+teaching content and the model/prompt config stay in one place. Color re-skinning is driven by
+each player's `color` and the pack's `brand.accent` (see [`src/lib/theme.js`](src/lib/theme.js)).
 
 ## Tech Stack
 - React + Vite + Tailwind CSS
