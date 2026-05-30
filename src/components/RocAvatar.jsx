@@ -1,6 +1,6 @@
 import React from 'react';
 import { hexFor } from '../lib/theme';
-import { SPECIES } from '../lib/rocs';
+import { SPECIES, evoStage } from '../lib/rocs';
 import { spriteFor } from '../lib/rocSprites';
 
 // Procedural SVG Roc — a little training rock with belt-colored band + per-
@@ -18,6 +18,7 @@ const RocAvatar = ({ roc, size = 96, beltColor, idle = false, poke = false }) =>
   const f = sp.feature;
   const eye = '#0a0a0f';
   const eq = roc?.wardrobe?.equipped || [];
+  const stage = evoStage(roc).stage; // 0..4 — drives aura + glints as it grows
 
   return (
     <svg className={cls} viewBox="0 0 100 100" width={size} height={size} role="img" aria-label={roc?.name || 'Roc'}>
@@ -27,6 +28,9 @@ const RocAvatar = ({ roc, size = 96, beltColor, idle = false, poke = false }) =>
           <stop offset="100%" stopColor={c.deep} />
         </radialGradient>
       </defs>
+      {/* evolution aura — grows with the Roc's rank */}
+      {stage >= 1 && <circle cx="50" cy="50" r={42 + stage * 2} fill="none" stroke={c.base} strokeWidth={stage >= 3 ? 2 : 1} opacity={0.12 + stage * 0.06} />}
+      {stage >= 4 && <circle cx="50" cy="50" r="47" fill="none" stroke="#fde047" strokeWidth="1.5" strokeDasharray="3 4" opacity="0.7" />}
       {f === 'wings' && <><path d="M18 50 Q2 40 8 64 Q16 60 24 62 Z" fill={c.deep} /><path d="M82 50 Q98 40 92 64 Q84 60 76 62 Z" fill={c.deep} /></>}
       {/* rock body */}
       <path d="M28 30 Q24 18 38 16 Q50 8 64 16 Q78 18 74 32 Q84 44 76 60 Q78 78 58 82 Q44 88 34 80 Q20 74 24 56 Q18 44 28 30 Z" fill={`url(#g${roc?.id || 'x'})`} stroke={c.dark} strokeWidth="2" />
@@ -45,6 +49,9 @@ const RocAvatar = ({ roc, size = 96, beltColor, idle = false, poke = false }) =>
       {f === 'beard' && <path d="M36 70 Q50 92 66 70 Q58 80 50 80 Q42 80 36 70 Z" fill="#e5e7eb" opacity="0.85" />}
       {f === 'staff' && <rect x="80" y="20" width="4" height="60" rx="2" fill={c.dark} transform="rotate(12 82 50)" />}
       {f === 'nunchuck' && <><circle cx="84" cy="40" r="4" fill={c.dark} /><circle cx="88" cy="54" r="4" fill={c.dark} /></>}
+      {/* evolution glints — more sparkle the higher the stage */}
+      {stage >= 2 && <circle cx="70" cy="34" r="1.8" fill="#fff" opacity="0.9" />}
+      {stage >= 3 && <><circle cx="32" cy="38" r="1.4" fill="#fff" opacity="0.85" /><circle cx="64" cy="74" r="1.4" fill="#fff" opacity="0.8" /></>}
       {/* equipped wardrobe cosmetics */}
       {eq.includes('headband') && <rect x="30" y="30" width="40" height="5" rx="2.5" fill={belt.base} />}
       {eq.includes('shades') && <g><rect x="34" y="42" width="13" height="9" rx="2" fill="#0a0a0f" /><rect x="55" y="42" width="13" height="9" rx="2" fill="#0a0a0f" /><rect x="47" y="45" width="8" height="2" fill="#0a0a0f" /></g>}

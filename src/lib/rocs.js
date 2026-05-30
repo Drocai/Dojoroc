@@ -119,6 +119,23 @@ export const WARDROBE = [
 
 export const ownedCosmetics = (roc) => WARDROBE.filter((w) => rocTier(roc) >= w.belt);
 
+// Evolution stages — a Roc visibly grows up as it ranks. Stage drives an aura
+// + size/eye tweaks in RocAvatar, so progress is felt at a glance.
+export const EVO_STAGES = [
+  { min: 0, stage: 0, name: 'Pebble' },
+  { min: 2, stage: 1, name: 'Disciple' },
+  { min: 4, stage: 2, name: 'Warrior' },
+  { min: 6, stage: 3, name: 'Master' },
+  { min: 8, stage: 4, name: 'Grandmaster' },
+];
+
+export function evoStage(roc) {
+  const tier = rocTier(roc);
+  let cur = EVO_STAGES[0];
+  for (const e of EVO_STAGES) if (tier >= e.min) cur = e;
+  return cur;
+}
+
 let _seq = 0;
 const newId = () => `roc_${Date.now().toString(36)}${(_seq++).toString(36)}`;
 

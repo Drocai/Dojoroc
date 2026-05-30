@@ -28,10 +28,29 @@ const Sparring = ({ roc, onWin }) => {
   const [bout, setBout] = useState(null);
   const [tier, setTier] = useState(null); // chosen difficulty
   const [rewarded, setRewarded] = useState(false);
+  const [hit, setHit] = useState({ you: false, foe: false }); // flash state
+  const prevHp = useRef(null);
   const logRef = useRef(null);
 
   useEffect(() => {
     if (logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight;
+  }, [bout]);
+
+  // Flash whichever side just lost HP.
+  useEffect(() => {
+    if (!bout) { prevHp.current = null; return; }
+    const p = prevHp.current;
+    if (p) {
+      const youHit = bout.you.hp < p.you;
+      const foeHit = bout.foe.hp < p.foe;
+      if (youHit || foeHit) {
+        setHit({ you: youHit, foe: foeHit });
+        const t = setTimeout(() => setHit({ you: false, foe: false }), 400);
+        prevHp.current = { you: bout.you.hp, foe: bout.foe.hp };
+        return () => clearTimeout(t);
+      }
+    }
+    prevHp.current = { you: bout.you.hp, foe: bout.foe.hp };
   }, [bout]);
 
   if (!roc) return <div className="text-sm text-zinc-500">Pick an active Roc to spar with.</div>;
@@ -79,11 +98,11 @@ const Sparring = ({ roc, onWin }) => {
   return (
     <div className="hud bg-zinc-900 border border-zinc-800 rounded-3xl p-6">
       <div className="flex items-center gap-3 mb-4">
-        <RocAvatar roc={bout.you.roc} size={44} idle={!bout.over} />
+        <span className={hit.you ? 'roc-hit' : ''}><RocAvatar roc={bout.you.roc} size={44} idle={!bout.over && !hit.you} /></span>
         <HpBar side={bout.you} color={bout.you.roc.color} />
         <span className="text-xs text-zinc-600 font-mono">VS</span>
         <HpBar side={bout.foe} color={bout.foe.roc.color} />
-        <RocAvatar roc={bout.foe.roc} size={44} />
+        <span className={hit.foe ? 'roc-hit' : ''}><RocAvatar roc={bout.foe.roc} size={44} /></span>
       </div>
 
       <div ref={logRef} className="h-32 overflow-y-auto bg-zinc-950/50 border border-zinc-800 rounded-2xl p-3 space-y-1 text-xs text-zinc-300 mb-3">

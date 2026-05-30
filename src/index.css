@@ -111,10 +111,21 @@ body,
   100% { transform: scale(1); }
 }
 
+/* Sparring hit feedback: a quick shake + red flash when a Roc takes damage. */
+.roc-hit { animation: rocHit 0.4s ease; }
+@keyframes rocHit {
+  0%, 100% { transform: translateX(0); filter: none; }
+  20% { transform: translateX(-5px); filter: brightness(1.8) sepia(1) hue-rotate(-30deg) saturate(4); }
+  40% { transform: translateX(5px); }
+  60% { transform: translateX(-3px); filter: brightness(1.4) sepia(0.6) hue-rotate(-30deg) saturate(3); }
+  80% { transform: translateX(3px); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .dojo-glow,
   .belt-up,
   .belt-up-badge,
   .roc-idle,
-  .roc-pop { animation: none; }
+  .roc-pop,
+  .roc-hit { animation: none; }
 }

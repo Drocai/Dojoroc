@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Award, Check, Plus, Pencil, Sparkles, MapPin, Lock } from 'lucide-react';
 import RocAvatar from './RocAvatar';
-import { BESTIARY, SPECIES, RARITIES, PERSONAS, makeRoc, rocBelt, unlockedAbilities, availablePersonas, ownedCosmetics, rocMastery, collectionProgress, speciesUnlocked, SPECIES_UNLOCK, isProSpecies, proLocked, FEATURE_PREMIUM } from '../lib/rocs';
+import { BESTIARY, SPECIES, RARITIES, PERSONAS, makeRoc, rocBelt, unlockedAbilities, availablePersonas, ownedCosmetics, rocMastery, collectionProgress, speciesUnlocked, SPECIES_UNLOCK, isProSpecies, proLocked, FEATURE_PREMIUM, evoStage } from '../lib/rocs';
 import { BELTS } from '../lib/rank';
 import { Crown } from 'lucide-react';
 import { themeFor } from '../lib/theme';
@@ -49,7 +49,7 @@ const Companions = ({ rocs = {}, accountXp = 0, currentGym, pro = false, activeR
                   <button onClick={() => { setName(active.name); setEditing(true); }} className="text-zinc-500 hover:text-white"><Pencil size={13} /></button>
                 </div>
               )}
-              <div className="text-xs text-zinc-500">{SPECIES[active.species]?.name} · {SPECIES[active.species]?.title}</div>
+              <div className="text-xs text-zinc-500">{SPECIES[active.species]?.name} · <span className={theme.text}>{evoStage(active).name}</span></div>
               <div className={`text-sm font-semibold mt-1 flex items-center gap-1.5 ${theme.text}`}><Award size={14} /> {rocBelt(active).name} · {active.xp} XP</div>
             </div>
           </div>
