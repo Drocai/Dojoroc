@@ -7,6 +7,7 @@ import HandoffKit from './components/HandoffKit';
 import DockedChat from './components/DockedChat';
 import ArcadeOverlay from './components/arcade/ArcadeOverlay';
 import Onboarding from './components/Onboarding';
+import QuencyGuide from './components/QuencyGuide';
 import AuthScreen from './components/AuthScreen';
 import Profile from './components/Profile';
 import MyQuency from './components/MyQuency';
@@ -476,6 +477,12 @@ function App() {
 
       <BeltUp rankName={rank.name} accent={accent} />
       <RocReaction roc={activeRoc} event={reaction} />
+      <QuencyGuide
+        displayName={me.label}
+        ready={onboarded}
+        onNavigate={(v) => { setShowHub(false); setView(v); }}
+        onOpenHub={() => setShowHub(true)}
+      />
       {!onboarded && <Onboarding name={me.label} onDone={() => updateData((d) => ({ ...d, onboarded: true }))} />}
       {pendingRecovery && <RecoveryModal username={pendingRecovery.username} code={pendingRecovery.code} onClose={clearRecovery} />}
     </div>
